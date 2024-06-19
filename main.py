@@ -1,7 +1,8 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler
 
-from src.bot.handlers import help_command, start, UserDataCollector
+from src.bot.handlers.base import start, help_command
+from src.bot.handlers.handlers import UserDataCollector
 from src.common.config import get_conf
 
 
