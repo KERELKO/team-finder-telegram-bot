@@ -1,3 +1,5 @@
+# type: ignore
+from abc import ABC, abstractmethod
 from telegram import ForceReply, Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
 
@@ -17,11 +19,16 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text('Help!')
 
 
-class BaseConversation:
+class BaseConversationHandler(ABC):
+    @classmethod
+    @abstractmethod
+    async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        ...
+
     @classmethod
     async def cancel_command(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Cancels and ends the conversation."""
         await update.message.reply_text(
-            'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
+            'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationHandler.END
