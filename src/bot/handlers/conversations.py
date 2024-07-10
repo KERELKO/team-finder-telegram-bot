@@ -3,11 +3,13 @@ from enum import Enum
 from typing import Callable
 
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, filters, MessageHandler
+from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler
 
-from src.common.dtos import UserDTO
+from src.infra.managers.base import AbstractGroupManager
+from src.common.entities import User, Group
 from src.common.constants import Games, Languages
 from src.bot.filters import ListFilter
+from src.bot.utils.parsers import parse_telegram_webpage
 
 from .base import BaseConversationHandler
 
@@ -22,7 +24,6 @@ class CollectUserDataHandler(BaseConversationHandler):
         start_conversation: int = 0
         game: int = 1
         language: int = 2
-        skill: int = 3
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -59,28 +60,18 @@ class CollectUserDataHandler(BaseConversationHandler):
     async def language_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         context.user_data['language'] = update.message.text
 
-        await update.message.reply_text(
-            'Excelent!\n'
-            'And the last question, how you rate yourself in this game from 1 to 10?',
+        username = update.message.from_user.username or 'NOT SET'
+        user = User(
+            id=update.message.from_user.id,
+            games=[context.user_data['game']],
+            languages=[context.user_data['language']],
+            username=username,
         )
-        return cls.Handlers.skill
-
-    @staticmethod
-    async def skill_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['skill'] = update.message.text
         await update.message.reply_text(
             'Thank for providing your information\n'
             'Now we can find you the best teammates!\n'
+            f'{user}',
         )
-        username = update.message.from_user.username or 'NOT SET'
-        user = UserDTO(
-            id=update.message.from_user.id,
-            game=context.user_data['game'],
-            username=username,
-            skill=context.user_data['skill'],
-            language=context.user_data['language'],
-        )
-        print(user)
         return ConversationHandler.END
 
     @classmethod
@@ -88,13 +79,10 @@ class CollectUserDataHandler(BaseConversationHandler):
         entry_point = [CommandHandler('collect', cls.start_conversation)]
         states = {
             cls.Handlers.game: [
-                MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler)
+                MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler),
             ],
             cls.Handlers.language: [MessageHandler(
                 ListFilter(items=[x for x in Languages]), cls.language_handler),
-            ],
-            cls.Handlers.skill: [
-                MessageHandler(filters.Regex('^[1-9]$|^10$'), cls.skill_handler)
             ],
         }
         fallbacks = [CommandHandler('cancel', cls.cancel_command)]
@@ -107,6 +95,8 @@ class CollectUserDataHandler(BaseConversationHandler):
 
 
 class CreateTeamConversation(BaseConversationHandler):
+    group_manager: AbstractGroupManager
+
     class Handlers(int, Enum):
         start_conversation: int = 0
         game: int = 1
@@ -129,12 +119,36 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     async def game_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['game_for_group'] = update.message.text
+        context.user_data['game'] = update.message.text
+        # User creates channel and gives channel's id to the bot
+        # bot says: okay bro, i'll try to find you some teammates!
+        # bot starts to send link to the channel and channel's title
+        # to the users which are the best match for the creator of the channel
+        # TODO: create flexible grade system for each game
+        await update.message.reply_text(
+            'Well done! Now you need to create group with own title, '
+            'when you finish send me link to that group, '
+            'I will add this group to a search and other users will be able to join',
+        )
         return cls.Handlers.create_group
 
     @classmethod
     async def create_group_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        group_link = update.message.text
+        group_title, group_description = parse_telegram_webpage(group_link)
+        group = Group(
+            title=group_title,
+            group_size=context.user_data['group_size'],
+            game=context.user_data['game'],
+            language=Languages.ukr,
+        )
+        print(group)
+        cls.group_manager.add_group(group)
         return ConversationHandler.END
+
+    @classmethod
+    def get_handler(cls) -> ConversationHandler:
+        ...
 
 
 class FindTeamConversation(BaseConversationHandler):
