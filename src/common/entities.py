@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.common.constants import Games, Languages
 
@@ -6,9 +6,9 @@ from src.common.constants import Games, Languages
 @dataclass
 class User:
     id: int
-    games: list[str]
     username: str
-    languages: list[str]
+    games: list[str] = field(default_factory=list)
+    languages: list[str] = field(default_factory=list)
 
 
 @dataclass

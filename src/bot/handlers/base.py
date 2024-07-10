@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 
 from telegram import ForceReply, Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
-
-from src.bot.constants import START_TEXT
+from src.bot.constants import START_TEXT, HELP_TEXT
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -17,7 +16,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text('Help!')
+    await update.message.reply_text(HELP_TEXT)
 
 
 class BaseConversationHandler(ABC):

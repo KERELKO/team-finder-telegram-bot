@@ -5,6 +5,8 @@ from typing import Callable
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler
 
+from src.common.di import Container
+from src.infra.repositories.base import AbstractUserRepository
 from src.infra.managers.base import AbstractGroupManager
 from src.common.entities import User, Group
 from src.common.constants import Games, Languages
@@ -61,12 +63,14 @@ class CollectUserDataHandler(BaseConversationHandler):
         context.user_data['language'] = update.message.text
 
         username = update.message.from_user.username or 'NOT SET'
+        repo: AbstractUserRepository = Container.resolve(AbstractUserRepository)
         user = User(
             id=update.message.from_user.id,
             games=[context.user_data['game']],
             languages=[context.user_data['language']],
             username=username,
         )
+        await repo.add(user)
         await update.message.reply_text(
             'Thank for providing your information\n'
             'Now we can find you the best teammates!\n'
@@ -76,7 +80,7 @@ class CollectUserDataHandler(BaseConversationHandler):
 
     @classmethod
     def get_handler(cls) -> ConversationHandler:
-        entry_point = [CommandHandler('collect', cls.start_conversation)]
+        entry_point = [CommandHandler('profile', cls.start_conversation)]
         states = {
             cls.Handlers.game: [
                 MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler),
@@ -100,7 +104,9 @@ class CreateTeamConversation(BaseConversationHandler):
     class Handlers(int, Enum):
         start_conversation: int = 0
         game: int = 1
-        create_group: int = 2
+        group_size: int = 2
+        language: int = 3
+        link: int = 4
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -137,7 +143,9 @@ class CreateTeamConversation(BaseConversationHandler):
         group_link = update.message.text
         group_title, group_description = parse_telegram_webpage(group_link)
         group = Group(
+            owner_id=context._user_id,
             title=group_title,
+            description=group_description if group_description else '',
             group_size=context.user_data['group_size'],
             game=context.user_data['game'],
             language=Languages.ukr,
@@ -148,7 +156,22 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     def get_handler(cls) -> ConversationHandler:
-        ...
+        entry_point = [CommandHandler('collect', cls.start_conversation)]
+        states = {
+            cls.Handlers.game: [
+                MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler),
+            ],
+            cls.Handlers.language: [MessageHandler(
+                ListFilter(items=[x for x in Languages]), cls.language_handler),
+            ],
+        }
+        fallbacks = [CommandHandler('cancel', cls.cancel_command)]
+        handler = ConversationHandler(
+            entry_points=entry_point,
+            states=states,
+            fallbacks=fallbacks
+        )
+        return handler
 
 
 class FindTeamConversation(BaseConversationHandler):
