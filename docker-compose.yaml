@@ -33,7 +33,7 @@ services:
       - mongodb
 
   memory:
-    image: redis:7.2.5
+    image: redis/redis-stack-server:latest
     container_name: memory
     ports:
       - 6379:6379

@@ -4,7 +4,7 @@ from src.common.constants import Games, Languages
 
 
 @dataclass(eq=False)
-class GroupFilter:
+class GroupFilters:
     title__contains: str | None = None
     game: Games | None = None
     language: Languages | None = None

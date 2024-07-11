@@ -1,34 +1,22 @@
-# type: ignore
-from src.common.config import get_conf
+import redis
 
-from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext, ApplicationBuilder
+# Connect to Redis
+r = redis.Redis(host='memory', port=6379)
 
+# Sample JSON data
+item = {
+    "id": 1,
+    "name": "Item1",
+    "description": "A sample item",
+    "price": 10.99
+}
 
-TOKEN = get_conf().TELEGRAM_BOT_TOKEN
+# Store the JSON data
+r.json().set('item:1', '.', item)
 
+# Set expiration time (in seconds)
+r.expire('item:1', 3600)  # Expires in 1 hour
 
-async def start(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-
-    chat = await context.bot.get_chat(chat_id)
-    group_title = chat.title
-    print(group_title)
-    # if first_message:
-    #     await update.message.reply_text(
-    #         f"Group Title: {group_title}\nFirst Message: {first_message}"
-    #     )
-    # else:
-    #     await update.message.reply_text(f"Group Title: {group_title}\nNo messages found")
-
-
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-
-    app.run_polling()
-
-
-if __name__ == '__main__':
-    main()
+# Retrieve JSON data
+retrieved_item = r.json().get('item:1')
+print(retrieved_item)

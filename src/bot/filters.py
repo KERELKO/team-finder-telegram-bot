@@ -1,9 +1,11 @@
+from typing import Any
+
 from telegram import Message
 from telegram.ext import filters
 
 
 class ListFilter(filters.MessageFilter):
-    def __init__(self, items: list[str]) -> None:
+    def __init__(self, items: list[Any]) -> None:
         self.items = items
         super().__init__(name=f"ListFilter({self.items})", data_filter=True)
 
