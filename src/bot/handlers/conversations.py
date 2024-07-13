@@ -167,7 +167,7 @@ class CreateTeamConversation(BaseConversationHandler):
         context.user_data['language'] = Language.from_string(update.message.text)
 
         await update.message.reply_text(
-            'Well done! Now you need to create group with own title, '
+            'Well done! Now you need to create a group with title and description if you want'
             'when you finish send me link to that group, '
             'I will add this group to a search board and other users will be able to join',
         )
@@ -257,7 +257,7 @@ class FindTeamByProfileConversation(BaseConversationHandler):
             language=user.language,
         )
         repo: AbstractGroupRepository = Container.resolve(AbstractGroupRepository)
-        groups = await repo.get_by_filters(filters=filters, pag=Pagination(0, 20))
+        groups = await repo.search(filters=filters, pag=Pagination(0, 20))
         if groups:
             group_text = '\n'.join(str(group) for group in groups)
             await update.message.reply_text(

@@ -20,5 +20,5 @@ class AbstractGroupRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_by_filters(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
+    async def search(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
         ...

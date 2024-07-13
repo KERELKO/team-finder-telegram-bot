@@ -1,6 +1,3 @@
-import logging
-import logging.config
-
 from mongorepo.asyncio.decorators import async_mongo_repository
 from mongorepo import Access
 
@@ -14,9 +11,6 @@ from src.common.entities import Group, User
 from src.common.filters import GroupFilters, Pagination
 
 from .base import AbstractUserRepository, AbstractGroupRepository
-
-
-logger_ = logging.basicConfig(filename='redis_repo.log')
 
 
 @async_mongo_repository(method_access=Access.PROTECTED)
@@ -51,18 +45,17 @@ class RedisGroupRepository(AbstractGroupRepository):
         await r.aclose()
         return group
 
-    async def get_by_filters(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
+    async def search(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
         search_parts = []
 
         if filters.size is not None:
-            # search_parts.append(f'@group_size:[{filters.size} {filters.size}]')
-            ...
+            search_parts.append(f'@size:[{filters.size} {filters.size}]')
 
         if filters.language is not None:
-            ...
+            search_parts.append(f'@game:[{filters.language.value} {filters.language.value}]')
 
         if filters.game is not None:
-            ...
+            search_parts.append(f'@language:[{filters.game.value} {filters.game.value}]')
 
         search_string = ' '.join(search_parts) if search_parts else '*'
 

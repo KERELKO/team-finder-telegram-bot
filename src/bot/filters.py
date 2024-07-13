@@ -5,6 +5,8 @@ from telegram.ext import filters
 
 
 class ListFilter(filters.MessageFilter):
+    """Checks if item in the list"""
+
     def __init__(self, items: list[Any]) -> None:
         self.items = items
         super().__init__(name=f"ListFilter({self.items})", data_filter=True)
