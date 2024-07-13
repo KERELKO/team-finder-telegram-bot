@@ -1,12 +1,11 @@
 from functools import cache
 import os
 from dataclasses import dataclass, field
-
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 import redis
 import redis.asyncio as aioredis
-from redis.commands.search.field import TextField, NumericField, TagField
+from redis.commands.search.field import NumericField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 
 from dotenv import load_dotenv
@@ -45,29 +44,32 @@ class Config:
 @dataclass(repr=False, slots=True, eq=False, frozen=True)
 class RedisConfig:
     GROUP_SCHEMA: tuple = field(default=(
-            TextField(name='$.id', as_name='id'),
-            NumericField(name='$.group_size', as_name='group_size'),
-            TextField(name='$.title', as_name='title'),
-            TagField(name='$.game', as_name='game'),
-            TagField(name='$.language', as_name='language'),
+            NumericField(name='$.size', as_name='size'),
+            NumericField(name='$.game', as_name='game'),
+            NumericField(name='$.language', as_name='language'),
         ),
         kw_only=True,
     )
-    GROUP_INDEX_PREFIX = 'group'
+
+    GROUP_INDEX_NAME: str = 'idx:groups'
+    GROUP_INDEX_PREFIX: str = 'group:'
 
     @staticmethod
     async def get_async_redis_client() -> aioredis.Redis:
         config = get_conf()
         return await aioredis.from_url(config.redis_url)
 
-    def create_indexes(self) -> bool:
+    def create_group_index(self) -> bool:
         config = get_conf()
         r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-        rs = r.ft('idx:groups')
+        indexes = r.execute_command('FT._LIST')
+        if self.GROUP_INDEX_NAME.encode() in indexes:
+            return False
+        rs = r.ft(self.GROUP_INDEX_NAME)
         rs.create_index(
             self.GROUP_SCHEMA,
             definition=IndexDefinition(
-                prefix=[f'{self.GROUP_INDEX_PREFIX}:'], index_type=IndexType.JSON
+                prefix=[self.GROUP_INDEX_PREFIX], index_type=IndexType.JSON
             )
         )
         return True
@@ -76,3 +78,8 @@ class RedisConfig:
 @cache
 def get_conf() -> Config:
     return Config()
+
+
+@cache
+def get_redis_conf() -> RedisConfig:
+    return RedisConfig()

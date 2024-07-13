@@ -1,13 +1,22 @@
-import json
+import logging
+import logging.config
 
 from mongorepo.asyncio.decorators import async_mongo_repository
 from mongorepo import Access
 
+import orjson
+
+from redis.commands.search.query import Query
+from redis.commands.search.result import Result
+
 from src.common.config import RedisConfig, get_conf
 from src.common.entities import Group, User
-from src.common.filters import GroupFilters
+from src.common.filters import GroupFilters, Pagination
 
 from .base import AbstractUserRepository, AbstractGroupRepository
+
+
+logger_ = logging.basicConfig(filename='redis_repo.log')
 
 
 @async_mongo_repository(method_access=Access.PROTECTED)
@@ -28,16 +37,41 @@ class RedisGroupRepository(AbstractGroupRepository):
     def __init__(self) -> None:
         self.config = RedisConfig()
 
-    async def pool(self):
+    async def client(self):
+        """Async redis client"""
         return await self.config.get_async_redis_client()
 
     async def add(self, group: Group) -> Group:
-        r = await self.pool()
-        key = f'{self.config.GROUP_INDEX_PREFIX}:{group.id}'
-        await r.execute_command('JSON.SET', key, '.', json.dumps(group.asdict()), 'NX')
-        await r.expire(key, get_conf().REDIS_OBJECTS_LIFETIME)
-        await r.close()
+        r = await self.client()
+        key = f'{self.config.GROUP_INDEX_PREFIX}{group.id}'
+        async with r.pipeline(transaction=True) as pipe:
+            await pipe.execute_command('JSON.SET', key, '.', orjson.dumps(group.asdict()))
+            await pipe.expire(key, get_conf().REDIS_OBJECTS_LIFETIME)
+            await pipe.execute()
+        await r.aclose()
         return group
 
-    async def get_by_filters(self, filters: GroupFilters) -> list[Group]:
-        ...
+    async def get_by_filters(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
+        search_parts = []
+
+        if filters.size is not None:
+            # search_parts.append(f'@group_size:[{filters.size} {filters.size}]')
+            ...
+
+        if filters.language is not None:
+            ...
+
+        if filters.game is not None:
+            ...
+
+        search_string = ' '.join(search_parts) if search_parts else '*'
+
+        r = await self.client()
+        rs = r.ft(self.config.GROUP_INDEX_NAME)
+        result: Result = await rs.search(
+            Query(search_string).paging(pag.offset, pag.limit)
+        )  # type: ignore
+        groups = [Group(**orjson.loads(doc.__dict__['json'])) for doc in result.docs]
+
+        await r.aclose()
+        return groups

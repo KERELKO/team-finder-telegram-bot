@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from src.common.entities import Group, User
-from src.common.filters import GroupFilters
+from src.common.filters import GroupFilters, Pagination
 
 
 class AbstractUserRepository(ABC):
@@ -20,5 +20,5 @@ class AbstractGroupRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_by_filters(self, filters: GroupFilters) -> list[Group]:
+    async def get_by_filters(self, filters: GroupFilters, pag: Pagination) -> list[Group]:
         ...

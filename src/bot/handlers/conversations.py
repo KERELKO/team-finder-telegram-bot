@@ -1,18 +1,19 @@
 # type: ignore
 from enum import Enum
-from typing import Callable
 
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
 
 from src.common.di import Container
-from src.infra.repositories.base import AbstractUserRepository, AbstractGroupRepository
+from src.common.config import get_conf
 from src.common.entities import User, Group
-from src.common.constants import Games, Languages
+from src.common.constants import Game, Language
+from src.common.filters import GroupFilters, Pagination
+
+from src.infra.repositories.base import AbstractUserRepository, AbstractGroupRepository
 from src.bot.filters import ListFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
-from src.common.config import get_conf
 
 from .base import BaseConversationHandler
 
@@ -24,17 +25,17 @@ class CollectUserDataHandler(BaseConversationHandler):
     """
 
     class Handlers(int, Enum):
-        start_conversation: int = 0
-        game: int = 1
-        language: int = 2
+        start_conversation = 0
+        game = 1
+        language = 2
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        choices: list[list[str]] = [[game for game in Games]]
+        choices: list[list[str]] = [[Game.as_string(game.value) for game in Game]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             one_time_keyboard=True,
-            input_field_placeholder='Games',
+            input_field_placeholder='Game',
         )
         await update.message.reply_text(
             'Okay, now I need to get some informaion about you to find the best teammates for you\n'
@@ -45,9 +46,9 @@ class CollectUserDataHandler(BaseConversationHandler):
 
     @classmethod
     async def game_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['game'] = update.message.text
+        context.user_data['game'] = Game.from_string(update.message.text)
 
-        choices: list[list[str]] = [[lan for lan in Languages]]
+        choices: list[list[str]] = [[Language.as_string(lan.value) for lan in Language]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             one_time_keyboard=True,
@@ -61,14 +62,14 @@ class CollectUserDataHandler(BaseConversationHandler):
 
     @classmethod
     async def language_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['language'] = update.message.text
+        context.user_data['language'] = Language.from_string(update.message.text)
 
         username = update.message.from_user.username or 'NOT SET'
         repo: AbstractUserRepository = Container.resolve(AbstractUserRepository)
         user = User(
             id=update.message.from_user.id,
-            games=[context.user_data['game']],
-            languages=[context.user_data['language']],
+            game=context.user_data['game'],
+            language=context.user_data['language'],
             username=username,
         )
         await repo.add(user)
@@ -84,10 +85,14 @@ class CollectUserDataHandler(BaseConversationHandler):
         entry_point = [CommandHandler('profile', cls.start_conversation)]
         states = {
             cls.Handlers.game: [
-                MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler),
+                MessageHandler(
+                    ListFilter(items=[Game.as_string(g.value) for g in Game]), cls.game_handler
+                ),
             ],
             cls.Handlers.language: [MessageHandler(
-                ListFilter(items=[x for x in Languages]), cls.language_handler),
+                ListFilter(items=[
+                    Language.as_string(x.value) for x in Language]), cls.language_handler
+                ),
             ],
         }
         fallbacks = [CommandHandler('cancel', cls.cancel_command)]
@@ -107,11 +112,11 @@ class CreateTeamConversation(BaseConversationHandler):
     # TODO: create flexible grade system for each game
 
     class Handlers(int, Enum):
-        start_conversation: int = 0
-        game: int = 1
-        team_size: int = 2
-        language: int = 3
-        link: int = 4
+        start_conversation = 0
+        game = 1
+        team_size = 2
+        language = 3
+        link = 4
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -119,7 +124,7 @@ class CreateTeamConversation(BaseConversationHandler):
 
         if isinstance(user, int):
             return user
-        choices: list[list[str]] = [[Games.AOE2, Games.CS2]]
+        choices: list[list[str]] = [[Game.as_string(g.value) for g in Game]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -134,7 +139,7 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     async def game_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['game'] = update.message.text
+        context.user_data['game'] = Game.from_string(update.message.text)
 
         await update.message.reply_text(
             'Now, set size of the team [2-5]',
@@ -143,9 +148,9 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     async def team_size_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['team_size'] = update.message.text
+        context.user_data['size'] = int(update.message.text)
 
-        choices: list[list[str]] = [[lan for lan in Languages]]
+        choices: list[list[str]] = [[Language.as_string(lan.value) for lan in Language]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             one_time_keyboard=True,
@@ -159,7 +164,7 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     async def language_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['language'] = update.message.text
+        context.user_data['language'] = Language.from_string(update.message.text)
 
         await update.message.reply_text(
             'Well done! Now you need to create group with own title, '
@@ -176,7 +181,7 @@ class CreateTeamConversation(BaseConversationHandler):
             owner_id=context._user_id,
             title=group_title,
             description=group_description if group_description else '',
-            group_size=context.user_data['team_size'],
+            size=context.user_data['size'],
             game=context.user_data['game'],
             language=context.user_data['language'],
         )
@@ -184,7 +189,7 @@ class CreateTeamConversation(BaseConversationHandler):
         await repo.add(group)
         await update.message.reply_text(
             'Great! Now your group will be available '
-            f'for join for the other users for {get_conf().REDIS_OBJECTS_LIFETIME / 60} minutes'
+            f'for join for the other users for {get_conf().REDIS_OBJECTS_LIFETIME // 60} minutes'
             f'\n{group}'
         )
         return ConversationHandler.END
@@ -194,7 +199,9 @@ class CreateTeamConversation(BaseConversationHandler):
         entry_point = [CommandHandler('create', cls.start_conversation)]
         states = {
             cls.Handlers.game: [
-                MessageHandler(ListFilter(items=[x for x in Games]), cls.game_handler),
+                MessageHandler(
+                    ListFilter(items=[Game.as_string(g.value) for g in Game]), cls.game_handler
+                ),
             ],
             cls.Handlers.team_size: [
                 MessageHandler(
@@ -203,14 +210,16 @@ class CreateTeamConversation(BaseConversationHandler):
                 ),
             ],
             cls.Handlers.language: [MessageHandler(
-                ListFilter(items=[x for x in Languages]), cls.language_handler),
+                ListFilter(
+                    items=[Language.as_string(lan.value) for lan in Language]), cls.language_handler
+                ),
             ],
-            cls.Handlers.link: {
+            cls.Handlers.link: [
                 MessageHandler(
                     filters.Regex(r'https:\/\/t\.me\/\+[A-Za-z0-9]+'),
                     cls.link_handler,
                 ),
-            }
+            ]
         }
         fallbacks = [CommandHandler('cancel', cls.cancel_command)]
         handler = ConversationHandler(
@@ -221,61 +230,59 @@ class CreateTeamConversation(BaseConversationHandler):
         return handler
 
 
-class FindTeamConversation(BaseConversationHandler):
-    class Handlers(int, Enum):
-        start_conversation: int = 0
-        action: int = 1
-        list_groups: int = 2
-        find_team: int = 3
+class FindTeamByProfileConversation(BaseConversationHandler):
 
-    class Actions(str, Enum):
-        list_groups: str = 'I want to see list of available groups'
-        search: str = 'Search a team for me'
+    class Handlers(int, Enum):
+        start_conversation = 0
+        find_team = 1
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        choices: list[list[str]] = [[game for game in Games]]
-        buttons = ReplyKeyboardMarkup(
-            resize_keyboard=True,
-            keyboard=choices,
-            one_time_keyboard=True,
-            input_field_placeholder='Game',
-        )
+        user = await get_user_or_end_conversation(update, context)
+        if isinstance(user, int):
+            return user
         await update.message.reply_text(
-            'Lets find you a team',
-            reply_markup=buttons,
+            'I will find you a team according to your profile:\n'
+            f'Language: {Language.as_string(user.language)}\n'
+            f'Game: {Game.as_string(user.game)}\n'
+            'Wait a couple of minutes...',
         )
-        return cls.Handlers.action
-
-    @classmethod
-    async def action_handler(
-        cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
-    ) -> int | Callable:
-        context.user_data['selected_game'] = update.message.text
-
-        choices: list[list[str]] = [[x for x in cls.Actions]]
-        buttons = ReplyKeyboardMarkup(
-            resize_keyboard=True,
-            keyboard=choices,
-            one_time_keyboard=True,
-            input_field_placeholder='Action',
-        )
-        message = await update.message.reply_text(
-            text='Now, choose what to do next',
-            reply_markup=buttons,
-        )
-        if message.text == cls.Actions.search:
-            return cls.Handlers.find_team
-        elif message.text == cls.Actions.list_groups:
-            return cls.Handlers.list_groups
-        return cls.action_handler(cls, update=update, context=context)
-
-    @classmethod
-    async def list_groups_handler(
-        cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
-    ) -> list[tuple[int, str]]:
-        ...
+        return cls.Handlers.find_team
 
     @classmethod
     async def find_team_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        ...
+        user: User = context.user_data['user']
+        filters = GroupFilters(
+            game=user.game,
+            language=user.language,
+        )
+        repo: AbstractGroupRepository = Container.resolve(AbstractGroupRepository)
+        groups = await repo.get_by_filters(filters=filters, pag=Pagination(0, 20))
+        if groups:
+            group_text = '\n'.join(str(group) for group in groups)
+            await update.message.reply_text(
+                'Here are the available teams to join:\n'
+                f'{group_text}'
+            )
+        else:
+            await update.message.reply_text(
+                'No available teams found matching your profile.'
+                f'{filters}\n'
+            )
+        return ConversationHandler.END
+
+    @classmethod
+    def get_handler(cls) -> ConversationHandler:
+        entry_point = [CommandHandler('find', cls.start_conversation)]
+        states = {
+            cls.Handlers.find_team: [
+                MessageHandler(filters.ALL, cls.find_team_handler),
+            ],
+        }
+        fallbacks = [CommandHandler('cancel', cls.cancel_command)]
+        handler = ConversationHandler(
+            entry_points=entry_point,
+            states=states,
+            fallbacks=fallbacks
+        )
+        return handler

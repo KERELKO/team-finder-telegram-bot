@@ -1,11 +1,16 @@
 from dataclasses import dataclass
 
-from src.common.constants import Games, Languages
+from src.common.constants import Game, Language
 
 
 @dataclass(eq=False)
 class GroupFilters:
-    title__contains: str | None = None
-    game: Games | None = None
-    language: Languages | None = None
+    game: Game | None = None
+    language: Language | None = None
     size: int | None = None
+
+
+@dataclass(eq=False)
+class Pagination:
+    offset: int = 0
+    limit: int = 20
