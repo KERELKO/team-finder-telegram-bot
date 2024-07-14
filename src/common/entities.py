@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Any
 import uuid
 
-from src.common.constants import Game, Language
+from src.common.constants import Game
 
 
 @dataclass
@@ -10,15 +10,10 @@ class User:
     id: int
     username: str
     game: Game
-    language: Language
 
     def asdict(self) -> dict[str, Any]:
-        data = {
-            'id': self.id,
-            'username': self.username,
-            'game': self.game,
-            'language': self.language,
-        }
+        data = asdict(self)
+        data['game'] = data['game'].value if not isinstance(data['game'], int) else data['game']
         return data
 
 
@@ -29,17 +24,9 @@ class Group:
     title: str
     size: int
     game: Game
-    language: Language
     description: str = ''
 
     def asdict(self) -> dict[str, Any]:
-        data = {
-            'id': self.id,
-            'owner_id': self.owner_id,
-            'title': self.title,
-            'size': self.size,
-            'game': self.game,
-            'language': self.language,
-            'description': self.description,
-        }
+        data = asdict(self)
+        data['game'] = data['game'].value if not isinstance(data['game'], int) else data['game']
         return data

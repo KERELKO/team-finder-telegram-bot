@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 
-from src.common.constants import Game, Language
-
 
 @dataclass(eq=False)
 class GroupFilters:
-    game: Game | None = None
-    language: Language | None = None
+    game_code: int | None = None
+    language_code: int | None = None
     size: int | None = None
 
 

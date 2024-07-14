@@ -46,7 +46,6 @@ class RedisConfig:
     GROUP_SCHEMA: tuple = field(default=(
             NumericField(name='$.size', as_name='size'),
             NumericField(name='$.game', as_name='game'),
-            NumericField(name='$.language', as_name='language'),
         ),
         kw_only=True,
     )

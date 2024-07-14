@@ -8,7 +8,7 @@ from src.bot.constants import START_TEXT, HELP_TEXT
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
+    """Send a message when the command /start is is used."""
     await update.message.reply_html(
         START_TEXT,
         reply_markup=ForceReply(selective=True),
@@ -16,7 +16,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
+    """Send a message when the command /help is is used."""
     await update.message.reply_text(HELP_TEXT)
 
 

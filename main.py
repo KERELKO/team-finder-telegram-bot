@@ -1,11 +1,11 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler
 
+from src.bot.handlers import find_command
 from src.bot.handlers.base import start, help_command
 from src.bot.handlers.conversations import (
     CollectUserDataHandler,
     CreateTeamConversation,
-    FindTeamByProfileConversation,
 )
 from src.common.config import get_conf, RedisConfig
 
@@ -17,10 +17,10 @@ def main() -> None:
 
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('find', find_command))
 
     app.add_handler(CollectUserDataHandler.get_handler())
     app.add_handler(CreateTeamConversation.get_handler())
-    app.add_handler(FindTeamByProfileConversation.get_handler())
 
     # Run the bot until the user presses Ctrl-C
     app.run_polling(allowed_updates=Update.ALL_TYPES)

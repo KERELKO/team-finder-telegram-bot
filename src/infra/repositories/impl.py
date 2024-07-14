@@ -51,11 +51,11 @@ class RedisGroupRepository(AbstractGroupRepository):
         if filters.size is not None:
             search_parts.append(f'@size:[{filters.size} {filters.size}]')
 
-        if filters.language is not None:
-            search_parts.append(f'@game:[{filters.language.value} {filters.language.value}]')
+        if filters.language_code is not None:
+            search_parts.append(f'@language:[{filters.language_code} {filters.language_code}]')
 
-        if filters.game is not None:
-            search_parts.append(f'@language:[{filters.game.value} {filters.game.value}]')
+        if filters.game_code is not None:
+            search_parts.append(f'@game:[{filters.game_code} {filters.game_code}]')
 
         search_string = ' '.join(search_parts) if search_parts else '*'
 
