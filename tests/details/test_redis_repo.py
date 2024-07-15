@@ -1,66 +1,76 @@
 import pytest
 
-from src.common.constants import Game
-from src.common.entities import Group
-from src.common.filters import GroupFilters, Pagination
-from src.infra.repositories.impl import RedisGroupRepository
+from src.domain.entities import Team
+from src.domain.entities.games import AOE2
+from src.common.filters import TeamFilters, Pagination
+from src.infra.repositories.impl import RedisTeamRepository
 
-from .conftest import group_factory
+from .conftest import team_factory
 
 
 @pytest.mark.asyncio
-async def test_can_add_groups():
-    repo = RedisGroupRepository()
+async def test_can_add_teams():
+    repo = RedisTeamRepository()
 
-    group_1 = group_factory()
-    group_2 = group_factory()
-    group_3 = group_factory()
+    team_1 = team_factory()
+    team_2 = team_factory()
+    team_3 = team_factory()
 
-    await repo.add(group_1)
-    await repo.add(group_2)
-    await repo.add(group_3)
+    await repo.add(team_1)
+    await repo.add(team_2)
+    await repo.add(team_3)
 
     assert True
 
 
 @pytest.mark.asyncio
-async def test_can_find_group_with_search():
-    group = group_factory()
-    group.game = Game.AOE2
+async def test_can_find_team_with_search():
+    team = team_factory()
+    team.game_id = AOE2.id
+    team.game_rating = 6
 
-    repo = RedisGroupRepository()
+    repo = RedisTeamRepository()
 
-    await repo.add(group)
+    await repo.add(team)
 
-    searched_groups = await repo.search(
-        filters=GroupFilters(game_code=group.game.value),
+    searched_teams = await repo.search(
+        filters=TeamFilters(game_id=team.game_id),
         pag=Pagination(),
     )
-    assert len(searched_groups) > 0
+    assert len(searched_teams) > 0
 
-    first_group = searched_groups[0]
+    first_team = searched_teams[0]
 
-    assert first_group.game == Game.AOE2
+    assert first_team.game_id == AOE2.id
 
 
 @pytest.mark.asyncio
 async def test_multiple_search_filters():
-    group = Group(
+    team = Team(
         owner_id=1,
         title='for search',
         size=4,
-        game=Game.AOE2,
+        game_id=AOE2.id,
+        game_rating=5,
     )
 
-    repo = RedisGroupRepository()
-    await repo.add(group)
+    repo = RedisTeamRepository()
+    await repo.add(team)
 
-    searched_group, *_ = await repo.search(
-        GroupFilters(
-            game_code=group.game.value, size=group.size
+    searched_teams = await repo.search(
+        TeamFilters(
+            game_id=team.game_id,
+            size=team.size,
+            min_rating=3,
+            max_rating=5,
         ),
         Pagination(limit=10),
     )
 
-    assert searched_group.game == group.game
-    assert searched_group.size == group.size
+    assert len(searched_teams) > 0
+
+    searched_team = searched_teams[0]
+
+    assert searched_team.game_id == team.game_id
+    assert searched_team.size == team.size
+    assert 3 <= searched_team.game_rating <= 8

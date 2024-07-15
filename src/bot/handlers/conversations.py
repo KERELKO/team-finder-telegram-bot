@@ -6,10 +6,10 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 
 from src.common.di import Container
 from src.common.config import get_conf
-from src.common.entities import User, Group
+from src.domain.entities import User, Group
 from src.common.constants import Game
 
-from src.infra.repositories.base import AbstractUserRepository, AbstractGroupRepository
+from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 from src.bot.filters import ListFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
@@ -139,7 +139,7 @@ class CreateTeamConversation(BaseConversationHandler):
             size=context.user_data['size'],
             game=context.user_data['game'],
         )
-        repo: AbstractGroupRepository = Container.resolve(AbstractGroupRepository)
+        repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
         await repo.add(group)
         await update.message.reply_text(
             'Чудово! Тепер твоя група доступна '

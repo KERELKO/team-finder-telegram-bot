@@ -1,13 +1,16 @@
 # type: ignore
+import asyncio
+import random
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot.utils import get_user
 from src.common.constants import Game
 from src.common.di import Container
-from src.common.entities import User
+from src.domain.entities import User
 from src.common.filters import GroupFilters, Pagination
-from src.infra.repositories.base import AbstractGroupRepository
+from src.infra.repositories.base import AbstractTeamRepository
 
 
 async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -24,8 +27,9 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         'Зачекай трішки...',
     )
     filters = GroupFilters(game_code=user.game)
-    repo: AbstractGroupRepository = Container.resolve(AbstractGroupRepository)
+    repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
     groups = await repo.search(filters=filters, pag=Pagination(0, 20))
+    await asyncio.sleep(random.randint(2, 3))
     if groups:
         group_text = '\n'.join(str(group) for group in groups)
         await update.message.reply_text(

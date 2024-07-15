@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from src.common.di import Container
-from src.common.entities import User
+from src.domain.entities import User
 from src.infra.repositories.base import AbstractUserRepository
 
 

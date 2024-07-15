@@ -43,15 +43,16 @@ class Config:
 
 @dataclass(repr=False, slots=True, eq=False, frozen=True)
 class RedisConfig:
-    GROUP_SCHEMA: tuple = field(default=(
+    TEAM_SCHEMA: tuple = field(default=(
             NumericField(name='$.size', as_name='size'),
-            NumericField(name='$.game', as_name='game'),
+            NumericField(name='$.game_id', as_name='game_id'),
+            NumericField(name='$.game_rating', as_name='game_rating'),
         ),
         kw_only=True,
     )
 
-    GROUP_INDEX_NAME: str = 'idx:groups'
-    GROUP_INDEX_PREFIX: str = 'group:'
+    TEAM_INDEX_NAME: str = 'idx:teams'
+    TEAM_INDEX_PREFIX: str = 'team:'
 
     @staticmethod
     async def get_async_redis_client() -> aioredis.Redis:
@@ -62,13 +63,13 @@ class RedisConfig:
         config = get_conf()
         r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
         indexes = r.execute_command('FT._LIST')
-        if self.GROUP_INDEX_NAME.encode() in indexes:
+        if self.TEAM_INDEX_NAME.encode() in indexes:
             return False
-        rs = r.ft(self.GROUP_INDEX_NAME)
+        rs = r.ft(self.TEAM_INDEX_NAME)
         rs.create_index(
-            self.GROUP_SCHEMA,
+            self.TEAM_SCHEMA,
             definition=IndexDefinition(
-                prefix=[self.GROUP_INDEX_PREFIX], index_type=IndexType.JSON
+                prefix=[self.TEAM_INDEX_PREFIX], index_type=IndexType.JSON
             )
         )
         return True

@@ -4,8 +4,8 @@ import logging
 
 import punq
 
-from src.infra.repositories.base import AbstractGroupRepository, AbstractUserRepository
-from src.infra.repositories.impl import MongoUserRepository, RedisGroupRepository
+from src.infra.repositories.base import AbstractTeamRepository, AbstractUserRepository
+from src.infra.repositories.impl import MongoUserRepository, RedisTeamRepository
 
 
 ABC = TypeVar('ABC')
@@ -29,6 +29,6 @@ class Container:
         container.register(logging.Logger, instance=logger)
 
         container.register(AbstractUserRepository, MongoUserRepository)
-        container.register(AbstractGroupRepository, RedisGroupRepository)
+        container.register(AbstractTeamRepository, RedisTeamRepository)
 
         return container

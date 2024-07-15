@@ -1,13 +1,20 @@
 import random
 
-from src.common.constants import Game
-from src.common.entities import Group
+from src.domain.entities import Group, Team
 
 
 def group_factory() -> Group:
     return Group(
         owner_id=random.randint(0, 20000),
         title=f'test_{random.randint(0, 20000)}',
-        game=random.choice([x for x in Game]),
+    )
+
+
+def team_factory() -> Team:
+    return Team(
         size=random.randint(2, 5),
+        game_id=random.randint(1, 8),
+        game_rating=random.randint(1, 10),
+        owner_id=random.randint(1, 97098),
+        title=f'Team #{random.randint(1, 96076)}',
     )

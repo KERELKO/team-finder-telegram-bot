@@ -163,13 +163,13 @@ files = [
 
 [[package]]
 name = "mongorepo"
-version = "0.1.3"
+version = "0.1.4"
 description = "Simple lib that dynamically creates repositories for MongoDB"
 optional = false
 python-versions = "<4.0,>=3.12"
 files = [
-    {file = "mongorepo-0.1.3-py3-none-any.whl", hash = "sha256:53ca48d38a1deefbed21fe90650a1568956320a22ab8b9a810f9cd1ec501ea13"},
-    {file = "mongorepo-0.1.3.tar.gz", hash = "sha256:b9e8635067fbcc2e065936ed595f28667445d15b2e9db64d47a6d612537806d5"},
+    {file = "mongorepo-0.1.4-py3-none-any.whl", hash = "sha256:1c3b20d93f0df5ce1042830fcd0c210034753c953734f46b328e36885585ea35"},
+    {file = "mongorepo-0.1.4.tar.gz", hash = "sha256:c470ab797f92094b8f5c3dc0e666d774e5dee7a280df7a5a96b20fd020e9ab9e"},
 ]
 
 [package.dependencies]
