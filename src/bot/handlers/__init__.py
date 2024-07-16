@@ -8,7 +8,7 @@ from telegram.ext import ContextTypes
 from src.bot.utils import get_user
 from src.common.di import Container
 from src.domain.entities import User
-from src.common.filters import GroupFilters, Pagination
+from src.common.filters import TeamFilters, Pagination
 from src.infra.repositories.base import AbstractTeamRepository
 
 
@@ -24,7 +24,11 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         'Спробую знайти команду згідно твого профілю\n'
         'Зачекай трішки...',
     )
-    filters = GroupFilters(game_code=user.game)
+    filters = TeamFilters(
+        game_id=user.games[0].id,
+        min_rating=user.games[0].rating - 1,
+        max_rating=user.games[0].rating + 1,
+    )
     repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
     groups = await repo.search(filters=filters, pag=Pagination(0, 20))
     await asyncio.sleep(random.randint(2, 3))

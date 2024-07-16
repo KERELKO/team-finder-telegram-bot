@@ -1,6 +1,7 @@
 from functools import cache
 import os
 from dataclasses import dataclass, field
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 import redis
