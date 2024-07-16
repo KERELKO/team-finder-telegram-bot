@@ -19,8 +19,8 @@ def main() -> None:
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('find', find_command))
 
-    app.add_handler(CollectUserDataHandler.get_handler())
-    app.add_handler(CreateTeamConversation.get_handler())
+    app.add_handler(CollectUserDataHandler.get_handler(command='profile'))
+    app.add_handler(CreateTeamConversation.get_handler(command='create'))
 
     # Run the bot until the user presses Ctrl-C
     app.run_polling(allowed_updates=Update.ALL_TYPES)

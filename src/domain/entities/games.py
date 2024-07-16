@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import cache
 
 
 class AbstractGame(ABC):
+    id: int
+    name: str
+
     @classmethod
     @abstractmethod
-    def _ranks(cls, codes: bool = False) -> dict | list[int]:
+    def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
         ...
 
 
@@ -33,16 +35,16 @@ class AOE2(AbstractGame):
     name: str = 'Age of empires 2'
 
     @classmethod
-    def ranks(cls, codes: bool = False) -> dict[int, int] | list[int]:
+    def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
         data = {
-            1: 600,
-            2: 800,
-            3: 1000,
-            4: 1200,
-            5: 1400,
-            6: 1600,
-            7: 1800,
-            8: 2000,
+            1: '600',
+            2: '800',
+            3: '1000',
+            4: '1200',
+            5: '1400',
+            6: '1600',
+            7: '1800',
+            8: '2000',
         }
         if codes:
             return list(data.keys())
@@ -55,6 +57,19 @@ class Game:
     rating: int
 
 
-@cache
 def games() -> list[type[AbstractGame]]:
     return [g for g in (AOE2, CS2)]
+
+
+def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
+    for game in games():
+        if game.id == game_id:
+            return game
+    return None
+
+
+def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
+    for game in games():
+        if game.name == game_name:
+            return game
+    return None

@@ -6,7 +6,6 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.bot.utils import get_user
-from src.common.constants import Game
 from src.common.di import Container
 from src.domain.entities import User
 from src.common.filters import GroupFilters, Pagination
@@ -22,8 +21,7 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
         return
     await update.message.reply_text(
-        'Спробую знайти команду згідно твого профілю:\n'
-        f'Гра: {Game.as_string(user.game)}\n'
+        'Спробую знайти команду згідно твого профілю\n'
         'Зачекай трішки...',
     )
     filters = GroupFilters(game_code=user.game)

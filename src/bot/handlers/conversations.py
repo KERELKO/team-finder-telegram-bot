@@ -6,9 +6,8 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 
 from src.common.di import Container
 from src.common.config import get_conf
-from src.domain.entities import User, Group
-from src.common.constants import Game
-
+from src.domain.entities import User, Team
+from src.domain.entities.games import games, get_game_by_name, AbstractGame, Game, get_game_by_id
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 from src.bot.filters import ListFilter
 from src.bot.utils.parsers import parse_telegram_webpage
@@ -26,10 +25,11 @@ class CollectUserDataHandler(BaseConversationHandler):
     class Handlers(int, Enum):
         start_conversation = 0
         game = 1
+        rating = 2
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        choices: list[list[str]] = [[Game.as_string(game.value) for game in Game]]
+        choices: list[list[str]] = [[game.name for game in games()]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             one_time_keyboard=True,
@@ -43,13 +43,33 @@ class CollectUserDataHandler(BaseConversationHandler):
 
     @classmethod
     async def game_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['game'] = Game.from_string(update.message.text)
+        game = get_game_by_name(update.message.text)
+        context.user_data['game_id'] = game.id
 
+        choices: list[list[str]] = [[k for k in game.ranks().values()]]
+        buttons = ReplyKeyboardMarkup(
+            keyboard=choices,
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+        await update.message.reply_text(
+            'На якому рівні ти граєш?',
+            reply_markup=buttons,
+        )
+        return cls.Handlers.rating
+
+    @classmethod
+    async def rating_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        for code, value in get_game_by_id(context.user_data['game_id']).ranks().items():
+            if value == update.message.text:
+                context.user_data['game_rating'] = code
+                break
+        game = Game(id=context.user_data['game_id'], rating=context.user_data['game_rating'])
         username = update.message.from_user.username or 'NOT SET'
         repo: AbstractUserRepository = Container.resolve(AbstractUserRepository)
         user = User(
             id=update.message.from_user.id,
-            game=context.user_data['game'],
+            games=[game],
             username=username,
         )
         await repo.add(user)
@@ -61,12 +81,17 @@ class CollectUserDataHandler(BaseConversationHandler):
         return ConversationHandler.END
 
     @classmethod
-    def get_handler(cls) -> ConversationHandler:
-        entry_point = [CommandHandler('profile', cls.start_conversation)]
+    def get_handler(cls, command: str) -> ConversationHandler:
+        entry_point = [CommandHandler(command, cls.start_conversation)]
         states = {
             cls.Handlers.game: [
                 MessageHandler(
-                    ListFilter(items=[Game.as_string(g.value) for g in Game]), cls.game_handler
+                    ListFilter(items=[g.name for g in games()]), cls.game_handler
+                ),
+            ],
+            cls.Handlers.rating: [
+                MessageHandler(
+                    filters.ALL, cls.rating_handler
                 ),
             ],
         }
@@ -85,15 +110,17 @@ class CreateTeamConversation(BaseConversationHandler):
         start_conversation = 0
         game = 1
         team_size = 2
+        rating = 3
         link = 4
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        context.user_data['team'] = {}
         user: User | int = await get_user_or_end_conversation(update, context)
-
         if isinstance(user, int):
             return user
-        choices: list[list[str]] = [[Game.as_string(g.value) for g in Game]]
+
+        choices: list[list[str]] = [[g.name for g in games()]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -104,12 +131,31 @@ class CreateTeamConversation(BaseConversationHandler):
             'Для якої гри ти хочеш зробити команду?',
             reply_markup=buttons,
         )
-        return cls.Handlers.game
+        return cls.Handlers.rating
 
     @classmethod
     async def game_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['game'] = Game.from_string(update.message.text)
+        game: AbstractGame = get_game_by_name(update.message.text)
+        context.user_data['team']['game_id'] = game.id
+        choices: list[list[str]] = [[k for k in game.ranks().items()]]
+        buttons = ReplyKeyboardMarkup(
+            keyboard=choices,
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+        await update.message.reply_text(
+            'На якому рівні ти граєш? Вибери середнє значення',
+            reply_markup=buttons,
+        )
 
+        return cls.Handlers.rating
+
+    @classmethod
+    async def rating_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        for code, value in get_game_by_name(context.user_data['team']['game_id']).ranks().items():
+            if value == update.message.text:
+                context.user_data['team']['game_rating'] = code
+                break
         await update.message.reply_text(
             'Тепер скажи який буде розмір команди? [2-5]',
         )
@@ -117,8 +163,7 @@ class CreateTeamConversation(BaseConversationHandler):
 
     @classmethod
     async def team_size_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['size'] = int(update.message.text)
-
+        context.user_data['team']['size'] = int(update.message.text)
         await update.message.reply_text(
             'Чудово! Тепер створи групу зі своєю назвою та описом '
             'коли закінчиш надішли мені посилання на неї, '
@@ -131,13 +176,14 @@ class CreateTeamConversation(BaseConversationHandler):
     async def link_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         group_link = update.message.text
         group_title, group_description = await parse_telegram_webpage(group_link)
-        group = Group(
+        group = Team(
             id=group_link,
             owner_id=context._user_id,
             title=group_title,
             description=group_description if group_description else '',
-            size=context.user_data['size'],
-            game=context.user_data['game'],
+            size=context.user_data['team']['size'],
+            game_id=context.user_data['team']['game_id'],
+            game_rating=context.user_data['team']['game_rating'],
         )
         repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
         await repo.add(group)
@@ -149,12 +195,12 @@ class CreateTeamConversation(BaseConversationHandler):
         return ConversationHandler.END
 
     @classmethod
-    def get_handler(cls) -> ConversationHandler:
-        entry_point = [CommandHandler('create', cls.start_conversation)]
+    def get_handler(cls, command: str) -> ConversationHandler:
+        entry_point = [CommandHandler(command, cls.start_conversation)]
         states = {
             cls.Handlers.game: [
                 MessageHandler(
-                    ListFilter(items=[Game.as_string(g.value) for g in Game]), cls.game_handler
+                    ListFilter(items=[g.name for g in games()]), cls.game_handler
                 ),
             ],
             cls.Handlers.team_size: [
