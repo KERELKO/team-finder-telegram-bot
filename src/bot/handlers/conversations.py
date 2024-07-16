@@ -2,10 +2,10 @@
 from enum import Enum
 
 from telegram import Update, ReplyKeyboardMarkup
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
-
+from src.bot.constants import TeamInfoTextHTML
 from src.common.di import Container
-from src.common.config import get_conf
 from src.domain.entities import User, Team
 from src.domain.entities.games import games, get_game_by_name, AbstractGame, Game, get_game_by_id
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
@@ -151,10 +151,11 @@ class CreateTeamConversation(BaseConversationHandler):
     async def rating_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         for code, value in get_game_by_id(context.user_data['team']['game_id']).ranks().items():
             if value == update.message.text:
+                context.user_data['team']['game_rating_value'] = value
                 context.user_data['team']['game_rating'] = code
                 break
         await update.message.reply_text(
-            'Тепер скажи який буде розмір команди? [2-5]',
+            'Тепер скажи який буде розмір команди? [2-5]'.format(),
         )
         return cls.Handlers.team_size
 
@@ -173,7 +174,7 @@ class CreateTeamConversation(BaseConversationHandler):
     async def link_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         group_link = update.message.text
         group_title, group_description = await parse_telegram_webpage(group_link)
-        group = Team(
+        team = Team(
             id=group_link,
             owner_id=context._user_id,
             title=group_title,
@@ -183,11 +184,18 @@ class CreateTeamConversation(BaseConversationHandler):
             game_rating=context.user_data['team']['game_rating'],
         )
         repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
-        await repo.add(group)
+        await repo.add(team)
+        response = TeamInfoTextHTML(
+            url=group_link,
+            title=group_title,
+            game=get_game_by_id(team.game_id).name,
+            skill=context.user_data['team']['game_rating_value'],
+            team_size=team.size,
+            description=team.description,
+        )
         await update.message.reply_text(
-            'Чудово! Тепер твоя група доступна '
-            f'для вступу для інших користувачів на {get_conf().REDIS_OBJECTS_LIFETIME // 60} хвилин'
-            f'\n{group}'
+            str(response),
+            parse_mode=ParseMode.HTML,
         )
         return ConversationHandler.END
 

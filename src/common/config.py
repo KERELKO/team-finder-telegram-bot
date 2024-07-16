@@ -26,6 +26,9 @@ class Config:
 
     REDIS_OBJECTS_LIFETIME: int = 15 * 60
 
+    # Used by /find command to search for the teams
+    RATING_OFFSET: int = 1
+
     def __post_init__(self) -> None:
         for _field in self.__slots__:
             if not getattr(self, _field):
@@ -63,9 +66,11 @@ class RedisConfig:
     def create_group_index(self) -> bool:
         config = get_conf()
         r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+
         indexes = r.execute_command('FT._LIST')
         if self.TEAM_INDEX_NAME.encode() in indexes:
             return False
+
         rs = r.ft(self.TEAM_INDEX_NAME)
         rs.create_index(
             self.TEAM_SCHEMA,

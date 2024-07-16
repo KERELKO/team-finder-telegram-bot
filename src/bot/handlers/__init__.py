@@ -4,11 +4,15 @@ import random
 
 from telegram import Update
 from telegram.ext import ContextTypes
+from telegram.constants import ParseMode
 
+from src.bot.constants import TeamInfoTextHTML
 from src.bot.utils import get_user
+from src.domain.entities import User, Team
+from src.domain.entities.games import get_game_by_id, AbstractGame, get_game_rank_value
 from src.common.di import Container
-from src.domain.entities import User
 from src.common.filters import TeamFilters, Pagination
+from src.common.config import get_conf
 from src.infra.repositories.base import AbstractTeamRepository
 
 
@@ -24,23 +28,34 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         'Спробую знайти команду згідно твого профілю\n'
         'Зачекай трішки...',
     )
+    offset = get_conf().RATING_OFFSET
     filters = TeamFilters(
         game_id=user.games[0].id,
-        min_rating=user.games[0].rating - 1,
-        max_rating=user.games[0].rating + 1,
+        min_rating=user.games[0].rating - offset,
+        max_rating=user.games[0].rating + offset,
     )
     repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
-    groups = await repo.search(filters=filters, pag=Pagination(0, 20))
+    teams: list[Team] = await repo.search(filters=filters, pag=Pagination(0, 20))
     await asyncio.sleep(random.randint(2, 3))
-    if groups:
-        group_text = '\n'.join(str(group) for group in groups)
+    if not teams:
         await update.message.reply_text(
-            'Доступні групи:\n'
-            f'{group_text}'
-        )
-    else:
-        await update.message.reply_text(
-            'Доступних груп для входу поки що немає :( '
+            'Доступних команд для входу поки що немає :( '
             'спробуй створити свою може хтось захоче пограти'
             f'{filters}\n'
+        )
+    await update.message.reply_text('Доступні команди:\n')
+    for team in teams:
+        game: AbstractGame = get_game_by_id(team.game_id)
+        text = TeamInfoTextHTML(
+            url=team.id,
+            title=team.title,
+            game=game.name,
+            skill=get_game_rank_value(game, team.game_id),
+            team_size=team.size,
+            description=team.description,
+            preface='',
+        )
+        await update.message.reply_text(
+            str(text),
+            parse_mode=ParseMode.HTML
         )
