@@ -12,7 +12,7 @@ def group_factory() -> Group:
 
 def team_factory() -> Team:
     return Team(
-        size=random.randint(2, 5),
+        players_to_fill=random.randint(2, 5),
         game_id=random.randint(1, 8),
         game_rating=random.randint(1, 10),
         owner_id=random.randint(1, 97098),

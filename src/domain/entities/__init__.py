@@ -21,6 +21,6 @@ class Group:
 
 @dataclass
 class Team(Group):
-    size: int
+    players_to_fill: int
     game_id: int
     game_rating: int

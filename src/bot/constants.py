@@ -23,7 +23,7 @@ _TEAM_INFO_TEXT_HTML = """
 <u><b>Заголовок:</b></u> {2}
 <u><b>Гра:</b></u> {3}
 <u><b>Скіл:</b></u> {4}
-<u><b>Розмір команди:</b></u> {5}
+<u><b>Гравців потрібно:</b></u> {5}
 {6}
 """
 
@@ -35,7 +35,7 @@ class TeamInfoTextHTML:
     title: str
     game: str
     skill: str
-    team_size: int
+    players_to_fill: int
     description: str | None = None
     preface: str | None = None
 
@@ -59,5 +59,5 @@ class TeamInfoTextHTML:
         desc_text = f'<u><b>Опис:</b></u> {self.description}' if self.description else ''
 
         return text.format(
-            preface, self.url, self.title, self.game, self.skill, self.team_size, desc_text
+            preface, self.url, self.title, self.game, self.skill, self.players_to_fill, desc_text
         )

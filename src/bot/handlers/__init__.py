@@ -50,8 +50,8 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             url=team.id,
             title=team.title,
             game=game.name,
-            skill=get_game_rank_value(game, team.game_id),
-            team_size=team.size,
+            skill=get_game_rank_value(game, team.game_rating),
+            players_to_fill=team.players_to_fill,
             description=team.description,
             preface='',
         )

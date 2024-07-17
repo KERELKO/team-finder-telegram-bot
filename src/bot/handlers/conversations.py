@@ -4,11 +4,13 @@ from enum import Enum
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
-from src.bot.constants import TeamInfoTextHTML
+
 from src.common.di import Container
-from src.domain.entities import User, Team
 from src.domain.entities.games import games, get_game_by_name, AbstractGame, Game, get_game_by_id
+from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
+
+from src.bot.constants import TeamInfoTextHTML
 from src.bot.filters import ListFilter, GameRanksFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
@@ -16,10 +18,10 @@ from src.bot.utils import get_user_or_end_conversation
 from .base import BaseConversationHandler
 
 
-class CollectUserDataHandler(BaseConversationHandler):
+class CollectUserDataConversation(BaseConversationHandler):
     """
     ### Aggregate handlers into ConversationHandler
-    Collect -> Game -> Language -> Skill
+    Start -> Game -> Rating
     """
 
     class Handlers(int, Enum):
@@ -105,6 +107,9 @@ class CollectUserDataHandler(BaseConversationHandler):
 
 
 class CreateTeamConversation(BaseConversationHandler):
+    """
+    Start -> Game -> Rating -> Team size -> Link
+    """
 
     class Handlers(int, Enum):
         start_conversation = 0
@@ -119,6 +124,16 @@ class CreateTeamConversation(BaseConversationHandler):
         user: User | int = await get_user_or_end_conversation(update, context)
         if isinstance(user, int):
             return user
+        repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
+
+        team = await repo.get_by_owner_id(owner_id=user.id)
+        if team is not None:
+            await update.message.reply_text(
+                'Не можна створювати більше однієї команди\n'
+                'якщо хочеш створити нову команду видали'
+                'минулу\nдопоміжна команда: /group_update'
+            )
+            return
 
         choices: list[list[str]] = [[g.name for g in games()]]
         buttons = ReplyKeyboardMarkup(
@@ -155,13 +170,13 @@ class CreateTeamConversation(BaseConversationHandler):
                 context.user_data['team']['game_rating'] = code
                 break
         await update.message.reply_text(
-            'Тепер скажи який буде розмір команди? [2-5]'.format(),
+            'Скільки гравців тобі потрібно? [1-5]',
         )
         return cls.Handlers.team_size
 
     @classmethod
     async def team_size_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        context.user_data['team']['size'] = int(update.message.text)
+        context.user_data['team']['players_to_fill'] = int(update.message.text)
         await update.message.reply_text(
             'Чудово! Тепер створи групу зі своєю назвою та описом '
             'коли закінчиш надішли мені посилання на неї, '
@@ -179,7 +194,7 @@ class CreateTeamConversation(BaseConversationHandler):
             owner_id=context._user_id,
             title=group_title,
             description=group_description if group_description else '',
-            size=context.user_data['team']['size'],
+            players_to_fill=context.user_data['team']['players_to_fill'],
             game_id=context.user_data['team']['game_id'],
             game_rating=context.user_data['team']['game_rating'],
         )
@@ -190,7 +205,7 @@ class CreateTeamConversation(BaseConversationHandler):
             title=group_title,
             game=get_game_by_id(team.game_id).name,
             skill=context.user_data['team']['game_rating_value'],
-            team_size=team.size,
+            players_to_fill=team.players_to_fill,
             description=team.description,
         )
         await update.message.reply_text(
@@ -213,7 +228,7 @@ class CreateTeamConversation(BaseConversationHandler):
             ],
             cls.Handlers.team_size: [
                 MessageHandler(
-                    ListFilter(items=['2', '3', '4', '5']),
+                    ListFilter(items=['1', '2', '3', '4', '5']),
                     cls.team_size_handler,
                 ),
             ],
@@ -225,6 +240,104 @@ class CreateTeamConversation(BaseConversationHandler):
             ]
         }
         fallbacks = [CommandHandler('cancel', cls.cancel_command)]
+        handler = ConversationHandler(
+            entry_points=entry_point,
+            states=states,
+            fallbacks=fallbacks
+        )
+        return handler
+
+
+class UpdateTeamConversation(BaseConversationHandler):
+    """
+    Update team -> End search | Change needed users count
+    """
+
+    end_search = 'Закрити пошук команди'
+    update_players = 'Змінити потрібну кількість учасників'
+
+    class Handlers(int, Enum):
+        start_conversation = 0
+        end_search_or_next = 1
+        number_of_players = 3
+
+    @classmethod
+    async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        user = await get_user_or_end_conversation(update, context)
+        if user is ConversationHandler.END:
+            return ConversationHandler.END
+        repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
+        team = await repo.get_by_owner_id(user.id)
+        if not team:
+            await update.message.reply_text(
+                'Команд по твому профілю не знайдено'
+            )
+            return ConversationHandler.END
+        context.user_data['team'] = team
+
+        choices = [[cls.end_search, cls.update_players]]
+        buttons = ReplyKeyboardMarkup(
+            keyboard=choices,
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+        await update.message.reply_text(
+            'Виберіть дію',
+            reply_markup=buttons,
+        )
+        return cls.Handlers.end_search_or_next
+
+    @classmethod
+    async def path_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        choice = update.message.text
+        if choice == cls.update_players:
+            await update.message.reply_text(
+                'Скільки ще потрібно гравців щоб створити повну команду? [1-5]'
+            )
+            return cls.Handlers.number_of_players
+        elif choice == cls.end_search:
+            repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
+            await repo.delete_by_owner_id(context._user_id)
+            await update.message.reply_text('Команда була видалена з пошуку успішно!')
+        return ConversationHandler.END
+
+    @classmethod
+    async def change_number_of_players_handlers(
+        cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
+    ) -> int:
+        count = update.message.text
+        repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
+        await repo.update_players_to_fill(context.user_data['team'].id, count)
+        await update.message.reply_text(
+            'Успішно обновлено!'
+        )
+        return ConversationHandler.END
+
+    @classmethod
+    def get_handler(cls, command: str) -> ConversationHandler:
+        entry_point = [CommandHandler(command, cls.start_conversation)]
+        states = {
+            cls.Handlers.number_of_players: [
+                MessageHandler(
+                    ListFilter(items=[cls.end_search, cls.update_players]), cls.path_handler
+                ),
+            ],
+            cls.Handlers.end_search_or_next: [
+                MessageHandler(
+                    filters.ALL, cls.path_handler
+                ),
+            ],
+            cls.Handlers.number_of_players: [
+                MessageHandler(
+                    ListFilter(items=['1', '2', '3', '4', '5']),
+                    cls.change_number_of_players_handlers,
+                ),
+            ],
+        }
+        fallbacks = [
+            CommandHandler('cancel', cls.cancel_command),
+            CommandHandler('2', cls.cancel_command),
+        ]
         handler = ConversationHandler(
             entry_points=entry_point,
             states=states,

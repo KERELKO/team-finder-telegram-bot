@@ -48,7 +48,7 @@ class Config:
 @dataclass(repr=False, slots=True, eq=False, frozen=True)
 class RedisConfig:
     TEAM_SCHEMA: tuple = field(default=(
-            NumericField(name='$.size', as_name='size'),
+            NumericField(name='$.owner_id', as_name='owner_id'),
             NumericField(name='$.game_id', as_name='game_id'),
             NumericField(name='$.game_rating', as_name='game_rating'),
         ),

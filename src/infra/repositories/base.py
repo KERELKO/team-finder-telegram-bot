@@ -22,3 +22,15 @@ class AbstractTeamRepository(ABC):
     @abstractmethod
     async def search(self, filters: TeamFilters, pag: Pagination) -> list[Team]:
         ...
+
+    @abstractmethod
+    async def get_by_owner_id(self, owner_id: int) -> Team | None:
+        ...
+
+    @abstractmethod
+    async def delete_by_owner_id(self, owner_id: int) -> bool:
+        ...
+
+    @abstractmethod
+    async def update_players_to_fill(self, team_id: str, count: int) -> None:
+        ...
