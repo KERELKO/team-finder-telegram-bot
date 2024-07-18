@@ -8,7 +8,6 @@ from src.bot.constants import START_TEXT, HELP_TEXT
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is is used."""
     await update.message.reply_html(
         START_TEXT,
         reply_markup=ForceReply(selective=True),
@@ -16,7 +15,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is is used."""
     await update.message.reply_text(HELP_TEXT)
 
 
@@ -28,8 +26,7 @@ class BaseConversationHandler(ABC):
 
     @classmethod
     async def cancel_command(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Cancels and ends the conversation."""
         await update.message.reply_text(
-            'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove(),
+            'Розмова перервана ', reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationHandler.END

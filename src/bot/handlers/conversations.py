@@ -10,7 +10,7 @@ from src.domain.entities.games import games, get_game_by_name, AbstractGame, Gam
 from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
-from src.bot.constants import TeamInfoTextHTML
+from src.bot.constants import TeamInfoTextHTML, BotCommands
 from src.bot.filters import ListFilter, GameRanksFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
@@ -130,8 +130,8 @@ class CreateTeamConversation(BaseConversationHandler):
         if team is not None:
             await update.message.reply_text(
                 'Не можна створювати більше однієї команди\n'
-                'якщо хочеш створити нову команду видали'
-                'минулу\nдопоміжна команда: /group_update'
+                'якщо хочеш створити нову команду видали минулу\n'
+                f'допоміжна команда: /{BotCommands.UPDATE_TEAM}'
             )
             return
 

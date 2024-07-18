@@ -26,7 +26,6 @@ class Config:
 
     REDIS_OBJECTS_LIFETIME: int = 15 * 60
 
-    # Used by /find command to search for the teams
     RATING_OFFSET: int = 1
 
     def __post_init__(self) -> None:
@@ -63,7 +62,7 @@ class RedisConfig:
         config = get_conf()
         return await aioredis.from_url(config.redis_url)
 
-    def create_group_index(self) -> bool:
+    def create_team_index(self) -> bool:
         config = get_conf()
         r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 

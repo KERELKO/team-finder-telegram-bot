@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
-from src.bot.constants import TeamInfoTextHTML
+from src.bot.constants import TeamInfoTextHTML, BotCommands
 from src.bot.utils import get_user
 from src.domain.entities import User, Team
 from src.domain.entities.games import get_game_by_id, AbstractGame, get_game_rank_value
@@ -21,7 +21,7 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if not user:
         await update.message.reply_text(  # type: ignore
             'У тебе ще немає профілю\n'
-            'Використай команду /profile щоб створити профіль',
+            f'Використай команду /{BotCommands.CREATE_PROFILE} щоб створити профіль',
         )
         return
     await update.message.reply_text(

@@ -1,21 +1,39 @@
 from dataclasses import dataclass
 
 from src.common.config import get_conf
+from src.domain.entities.games import Game
 
 
-START_TEXT = """
+class BotCommands:
+    START = 'start'
+    HELP = 'help'
+    FIND_TEAM = 'find'
+    CREATE_PROFILE = 'profile'
+    CREATE_TEAM = 'create'
+    UPDATE_TEAM = 'update_team'
+
+
+_START_TEXT = """
 Привіт від TeamFinderBot!\n
 Я спробую допомогти знайти тобі команду для певних ігор\n
-можеш використати команду /help яка допоможе розбіратись в функціоналі
+можеш використати команду /{0} яка допоможе розбіратись в функціоналі
 """
+START_TEXT = _START_TEXT.format(BotCommands.HELP)
 
-HELP_TEXT = """
-Допоміжний текст, використаний командою /help\n
-Почати /start команда\n
-/profile - щоб створити базовий профіль\n
-/find - щоб знайти команду згідно профілю\n
-/create - щоб створити команду\n
+_HELP_TEXT = """
+Допоміжний текст, використаний командою /{0}\n
+Почати /{1} команда\n
+/{2} - створити базовий профіль\n
+/{3} - знайти команду згідно профілю\n
+/{4} - створити команду\n
 """
+HELP_TEXT = _HELP_TEXT.format(
+    BotCommands.HELP,
+    BotCommands.START,
+    BotCommands.CREATE_PROFILE,
+    BotCommands.FIND_TEAM,
+    BotCommands.CREATE_TEAM,
+)
 
 _TEAM_INFO_TEXT_HTML = """
 {0}
@@ -25,6 +43,12 @@ _TEAM_INFO_TEXT_HTML = """
 <u><b>Скіл:</b></u> {4}
 <u><b>Гравців потрібно:</b></u> {5}
 {6}
+"""
+
+_USER_INFO_TEXT_HTML = """
+<u><b>Нікнейм:</b></u> {0}
+{1}
+<u><b>ігри:</b></u> {2}
 """
 
 
@@ -61,3 +85,18 @@ class TeamInfoTextHTML:
         return text.format(
             preface, self.url, self.title, self.game, self.skill, self.players_to_fill, desc_text
         )
+
+
+@dataclass
+class UserInfoHTML:
+    id: int
+    username: str
+    games: list[Game]
+    show_id: bool = False
+
+    def __str__(self) -> str:
+        text = _USER_INFO_TEXT_HTML
+        id_text = ''
+        if self.show_id:
+            id_text = f'<u><b>айді:</b></u> {self.id}'
+        return text.format(self.username, id_text, )
