@@ -1,6 +1,6 @@
+import logging
 from functools import cache
 from typing import Any, Type, TypeVar
-import logging
 
 import punq
 
@@ -28,7 +28,7 @@ class Container:
         logger = logging.getLogger('Logger')
         container.register(logging.Logger, instance=logger)
 
-        container.register(AbstractUserRepository, MongoUserRepository)
+        container.register(AbstractUserRepository, instance=MongoUserRepository())
         container.register(AbstractTeamRepository, RedisTeamRepository)
 
         return container

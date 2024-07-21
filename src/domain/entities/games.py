@@ -51,7 +51,7 @@ class AOE2(AbstractGame):
         return data
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class Game:
     id: int
     rating: int
@@ -75,8 +75,10 @@ def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
     return None
 
 
-def get_game_rank_value(game: AbstractGame, key: int) -> str:
+def get_game_rank_value(
+    game: type[AbstractGame], key: int, default: str | None = None
+) -> str | None:
     for _key, value in game.ranks().items():  # type: ignore
         if _key == key:
             return value
-    return 'N/D'
+    return default

@@ -42,7 +42,7 @@ def team(game: Game) -> Team:
     return Team(
         owner_id=owner_id,
         title=f'test_{owner_id}',
-        size=random.randint(2, 10),
+        players_to_fill=random.randint(2, 10),
         game_id=game.id,
         game_rating=game.rating,
         description='test group',

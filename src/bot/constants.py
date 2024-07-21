@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.common.config import get_conf
-from src.domain.entities.games import Game
+from src.domain.entities.games import Game, get_game_by_id, get_game_rank_value
 
 
 class BotCommands:
@@ -35,6 +35,7 @@ HELP_TEXT = _HELP_TEXT.format(
     BotCommands.CREATE_TEAM,
 )
 
+
 _TEAM_INFO_TEXT_HTML = """
 {0}
 <u><b>Посилання:</b></u> {1}
@@ -43,12 +44,6 @@ _TEAM_INFO_TEXT_HTML = """
 <u><b>Скіл:</b></u> {4}
 <u><b>Гравців потрібно:</b></u> {5}
 {6}
-"""
-
-_USER_INFO_TEXT_HTML = """
-<u><b>Нікнейм:</b></u> {0}
-{1}
-<u><b>ігри:</b></u> {2}
 """
 
 
@@ -87,7 +82,15 @@ class TeamInfoTextHTML:
         )
 
 
-@dataclass
+_USER_INFO_TEXT_HTML = """
+<u><b>Нікнейм:</b></u> {0}
+{1}
+<u><b>Ігри:</b></u>
+{2}
+"""
+
+
+@dataclass(repr=False, eq=False)
 class UserInfoHTML:
     id: int
     username: str
@@ -98,5 +101,12 @@ class UserInfoHTML:
         text = _USER_INFO_TEXT_HTML
         id_text = ''
         if self.show_id:
-            id_text = f'<u><b>айді:</b></u> {self.id}'
-        return text.format(self.username, id_text, )
+            id_text = f'<u><b>ID:</b></u> {self.id}'
+        games = []
+        for game_data in self.games:
+            game = get_game_by_id(game_data.id)
+            if not game:
+                continue
+            games.append(f'\t<b>{game.name} [{get_game_rank_value(game, game_data.id)}]</b>')
+
+        return text.format(self.username, id_text, '\n'.join(games) if games else '')

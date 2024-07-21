@@ -39,10 +39,10 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await asyncio.sleep(random.randint(2, 3))
     if not teams:
         await update.message.reply_text(
-            'Доступних команд для входу поки що немає :( '
+            'Доступних команд для входу поки що немає :(\n'
             'спробуй створити свою може хтось захоче пограти'
-            f'{filters}\n'
         )
+        return
     await update.message.reply_text('Доступні команди:\n')
     for team in teams:
         game: AbstractGame = get_game_by_id(team.game_id)

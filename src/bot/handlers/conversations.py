@@ -10,7 +10,7 @@ from src.domain.entities.games import games, get_game_by_name, AbstractGame, Gam
 from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
-from src.bot.constants import TeamInfoTextHTML, BotCommands
+from src.bot.constants import TeamInfoTextHTML, BotCommands, UserInfoHTML
 from src.bot.filters import ListFilter, GameRanksFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
@@ -75,10 +75,17 @@ class CollectUserDataConversation(BaseConversationHandler):
             username=username,
         )
         await repo.add(user)
+        reply_text = UserInfoHTML(
+            id=user.id,
+            username=user.username,
+            games=user.games,
+            show_id=False
+        )
         await update.message.reply_text(
             'Дякую, що надав важливу інформацію!\n'
-            'Тепер ми зможеш підібрати накращих тімейтів для тебе!\n'
-            f'{user}',
+            'Тепер я зможу підібрати накращих тімейтів для тебе!\n'
+            f'{str(reply_text)}',
+            parse_mode=ParseMode.HTML,
         )
         return ConversationHandler.END
 
@@ -129,7 +136,7 @@ class CreateTeamConversation(BaseConversationHandler):
         team = await repo.get_by_owner_id(owner_id=user.id)
         if team is not None:
             await update.message.reply_text(
-                'Не можна створювати більше однієї команди\n'
+                'Не можна створювати команду якщо вже є активна\n'
                 'якщо хочеш створити нову команду видали минулу\n'
                 f'допоміжна команда: /{BotCommands.UPDATE_TEAM}'
             )
@@ -181,7 +188,7 @@ class CreateTeamConversation(BaseConversationHandler):
             'Чудово! Тепер створи групу зі своєю назвою та описом '
             'коли закінчиш надішли мені посилання на неї, '
             'Я додам цю групу до пошукової дошки і другі '
-            'люди зможуть зайти щоб пограти разом з тобою',
+            'користувачі зможуть зайти щоб пограти разом з тобою',
         )
         return cls.Handlers.link
 

@@ -1,7 +1,6 @@
 from dataclasses import asdict
 
-from mongorepo.asyncio.decorators import async_mongo_repository
-from mongorepo import Access
+from mongorepo.asyncio.classes import AsyncBasedMongoRepository
 
 import orjson
 
@@ -16,17 +15,15 @@ from src.common.filters import TeamFilters, Pagination
 from .base import AbstractUserRepository, AbstractTeamRepository
 
 
-@async_mongo_repository(method_access=Access.PROTECTED)
-class MongoUserRepository(AbstractUserRepository):
+class MongoUserRepository(AsyncBasedMongoRepository[User], AbstractUserRepository):
     class Meta:
-        dto = User
         collection = get_conf().mongodb_user_collection()
 
     async def get_by_id(self, id: int) -> User | None:
-        return await self._get(id=id)  # type: ignore
+        return await super().get(id=id)
 
     async def add(self, user: User) -> User:
-        await self._add(dto=user)  # type: ignore
+        await super().add(dto=user)
         return user
 
 
