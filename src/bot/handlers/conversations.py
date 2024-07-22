@@ -1,4 +1,5 @@
 # type: ignore
+import asyncio
 from enum import Enum
 
 from telegram import Update, ReplyKeyboardMarkup
@@ -6,7 +7,8 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
 
 from src.common.di import Container
-from src.domain.entities.games import games, get_game_by_name, AbstractGame, Game, get_game_by_id
+from src.common.utils import get_game_by_id, get_game_by_name
+from src.domain.entities.games import games, AbstractGame, Game
 from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
@@ -312,8 +314,19 @@ class UpdateTeamConversation(BaseConversationHandler):
     async def change_number_of_players_handlers(
         cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> int:
-        count = update.message.text
+        count = int(update.message.text)
         repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
+        if count == 0:
+            await repo.delete_by_owner_id(context._user_id)
+            await update.message.reply_text(
+                'Потрібна кількість користувачів для команди знайдена\n'
+                'Закриваю пошук...'
+            )
+            await asyncio.sleep(1)
+            await update.message.reply_text(
+                'Команда була видалена з пошуку успішно!'
+            )
+            return ConversationHandler.END
         await repo.update_players_to_fill(context.user_data['team'].id, count)
         await update.message.reply_text(
             'Успішно обновлено!'
@@ -336,7 +349,7 @@ class UpdateTeamConversation(BaseConversationHandler):
             ],
             cls.Handlers.number_of_players: [
                 MessageHandler(
-                    ListFilter(items=['1', '2', '3', '4', '5']),
+                    ListFilter(items=['0', '1', '2', '3', '4', '5']),
                     cls.change_number_of_players_handlers,
                 ),
             ],

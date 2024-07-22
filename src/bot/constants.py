@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from src.common.config import get_conf
-from src.domain.entities.games import Game, get_game_by_id, get_game_rank_value
+from src.domain.entities.games import Game
+from src.common.utils import get_game_by_id, get_game_rank_value
 
 
 class BotCommands:

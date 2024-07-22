@@ -1,0 +1,25 @@
+from src.domain.entities.games import games
+from src.domain.entities.games import AbstractGame
+
+
+def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
+    for game in games():
+        if game.id == game_id:
+            return game
+    return None
+
+
+def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
+    for game in games():
+        if game.name == game_name:
+            return game
+    return None
+
+
+def get_game_rank_value(
+    game: type[AbstractGame], key: int, default: str | None = None
+) -> str | None:
+    for _key, value in game.ranks().items():  # type: ignore
+        if _key == key:
+            return value
+    return default

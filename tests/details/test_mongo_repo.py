@@ -16,7 +16,7 @@ async def test_add_and_get_operations_with_mongo_repo() -> None:
 
     await repo.add(user)
 
-    resolved_user: User | None = await repo.get_by_id(id=user_id)
+    resolved_user: User | None = await repo.get_by_id(id=user_id)  # type: ignore
     assert resolved_user is not None
     assert resolved_user.username == 'admin'
 

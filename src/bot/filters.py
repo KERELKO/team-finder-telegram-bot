@@ -7,7 +7,7 @@ from src.domain.entities.games import games
 
 
 class ListFilter(filters.MessageFilter):
-    """Checks if item in the list"""
+    """Checks if `message.text` in the list"""
 
     def __init__(self, items: list[Any]) -> None:
         self.items = items
@@ -18,7 +18,7 @@ class ListFilter(filters.MessageFilter):
 
 
 class GameRanksFilter(filters.MessageFilter):
-    """Check if string is game rank"""
+    """Check if `message.text` is a game rank"""
 
     def __init__(self) -> None:
         super().__init__(name=f'{self.__class__.__name__}', data_filter=True)
