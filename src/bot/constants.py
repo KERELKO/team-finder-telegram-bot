@@ -108,6 +108,6 @@ class UserInfoHTML:
             game = get_game_by_id(game_data.id)
             if not game:
                 continue
-            games.append(f'\t<b>{game.name} [{get_game_rank_value(game, game_data.id)}]</b>')
+            games.append(f'\t<b>{game.name} [{get_game_rank_value(game, game_data.rating)}]</b>')
 
         return text.format(self.username, id_text, '\n'.join(games) if games else '')

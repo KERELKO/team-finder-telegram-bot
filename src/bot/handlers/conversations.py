@@ -40,7 +40,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             input_field_placeholder='Гра',
         )
         await update.message.reply_text(
-            'Зараз мені потрібно дізнатись більше про тебе, скажи в які ігри зі списку ти граєш?',
+            'Зараз мені потрібно дізнатись більше про тебе, скажи в які гру зі списку ти граєш?',
             reply_markup=buttons,
         )
         return cls.Handlers.game
@@ -301,7 +301,7 @@ class UpdateTeamConversation(BaseConversationHandler):
         choice = update.message.text
         if choice == cls.update_players:
             await update.message.reply_text(
-                'Скільки ще потрібно гравців щоб створити повну команду? [1-5]'
+                'Скільки ще потрібно гравців щоб створити повну команду? [0-5]'
             )
             return cls.Handlers.number_of_players
         elif choice == cls.end_search:
