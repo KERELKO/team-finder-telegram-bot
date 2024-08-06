@@ -1,12 +1,20 @@
-
+import json
+from dataclasses import dataclass
+from functools import cache
 from typing import Any
+
+from src.common.config import get_conf
 
 from .base import AbstractGame, AbstractGames
 
 
+@dataclass(eq=False)
 class CS2(AbstractGame):
     id: int = 1
     name: str = 'Counter Strike 2'
+
+    def __eq__(self, other: AbstractGame) -> bool:
+        return super().__eq__(other)
 
     @classmethod
     def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
@@ -22,9 +30,13 @@ class CS2(AbstractGame):
         return data
 
 
+@dataclass(eq=False)
 class AOE2(AbstractGame):
     id: int = 2
     name: str = 'Age of empires 2'
+
+    def __eq__(self, other: AbstractGame) -> bool:
+        return super().__eq__(other)
 
     @classmethod
     def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
@@ -44,12 +56,12 @@ class AOE2(AbstractGame):
 
 
 class GamesFromClasses(AbstractGames):
-    def __init__(self) -> None:
-        self.games: list[type[AbstractGame]] = [AOE2, CS2]
+    def __init__(self, games: list[type[AbstractGame]] | None = None) -> None:
+        if not games:
+            self.games = [AOE2, CS2]
+        else:
+            self.games = games
         self.i = 0
-
-    def __iter__(self):
-        return self
 
     def __next__(self):
         try:
@@ -60,34 +72,60 @@ class GamesFromClasses(AbstractGames):
             raise StopIteration
 
     @classmethod
-    def factory(cls) -> list[type[AbstractGame]]:
-        return [g for g in GamesFromClasses()]
+    def factory(cls) -> list[AbstractGame]:
+        return [val(id=idx+1) for idx, val in enumerate(GamesFromClasses())]
 
 
 class GamesFromFile(AbstractGames):
-    def __init__(self) -> None:
-        self.games: list[type[AbstractGame]] = [AOE2, CS2]
+    game_id: int = 1
 
-    def __iter__(self):
-        return self
+    def __init__(self) -> None:
+        # TODO: fill it
+        self.games: list[AbstractGame] = self.__class__._get_games_from_file()
+        self.i = 0
 
     def __next__(self):
-        i = 0
         try:
-            item = self.games[i]
-            i += 1
+            item = self.games[self.i]
+            self.i += 1
             return item
         except IndexError:
             raise StopIteration
 
-    @staticmethod
-    def _create_game_from_dict(data: dict[str, Any]) -> AbstractGame:
-        ...
+    @classmethod
+    def _create_game_instance(cls, game_name: str, json_ranks: dict[str, str]) -> AbstractGame:
 
-    @staticmethod
-    def _create_games_from_json(data) -> list[type[AbstractGame]]:
-        ...
+        class ConcreteGame(AbstractGame):
+            @classmethod
+            def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
+                _ranks = {int(key): value for key, value in json_ranks.items()}
+                if codes:
+                    return list(_ranks.keys())
+                return _ranks
+
+        ConcreteGame.__name__ = AbstractGame.__class__.__name__ + f'_{cls.game_id}'
+
+        instance = ConcreteGame(id=cls.game_id, name=game_name)
+        cls.game_id += 1
+
+        return instance
 
     @classmethod
-    def factory(cls) -> list[type[AbstractGame]]:
-        return [g for g in GamesFromClasses().games]
+    def _get_game_list_from_data(cls, data: dict[str, Any]) -> list[AbstractGame]:
+        games = []
+        for key, value in data.items():
+            games.append(cls._create_game_instance(key, value['ranks']))
+        return games
+
+    @classmethod
+    @cache
+    def _get_games_from_file(cls) -> list[AbstractGame]:
+        games: list[AbstractGame] = []
+        with open(get_conf().games_json_path, 'r') as file:
+            loaded_data = json.load(file)
+            games = cls._get_game_list_from_data(loaded_data)
+        return games
+
+    @classmethod
+    def factory(cls) -> list[AbstractGame]:
+        return cls._get_games_from_file()

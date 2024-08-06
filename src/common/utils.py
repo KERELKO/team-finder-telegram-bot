@@ -3,7 +3,7 @@ from src.domain.entities.games.base import AbstractGame, AbstractGames
 
 
 def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
-    games = Container.resolve(AbstractGames)
+    games: AbstractGames = Container.resolve(AbstractGames)
     for game in games:
         if game.id == game_id:
             return game
@@ -11,7 +11,7 @@ def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
 
 
 def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
-    games = Container.resolve(AbstractGames)
+    games: AbstractGames = Container.resolve(AbstractGames)
     for game in games:
         if game.name == game_name:
             return game

@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 import punq
 
 from src.domain.entities.games.base import AbstractGames
-from src.domain.entities.games.impl import GamesFromClasses
+from src.domain.entities.games.impl import GamesFromFile
 from src.infra.repositories.base import AbstractTeamRepository, AbstractUserRepository
 from src.infra.repositories.impl import MongoUserRepository, RedisTeamRepository
 
@@ -33,6 +33,6 @@ class Container:
         container.register(AbstractUserRepository, instance=MongoUserRepository())
         container.register(AbstractTeamRepository, RedisTeamRepository)
 
-        container.register(AbstractGames, factory=GamesFromClasses.factory)
+        container.register(AbstractGames, factory=GamesFromFile.factory)
 
         return container

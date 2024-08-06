@@ -1,7 +1,7 @@
 import pytest
 
 from src.domain.entities import Team
-from src.domain.entities.games import AOE2
+from src.domain.entities.games.impl import AOE2
 from src.common.filters import TeamFilters, Pagination
 from src.infra.repositories.impl import RedisTeamRepository
 
