@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from functools import cache
 from dataclasses import dataclass, field
 
@@ -32,6 +33,11 @@ class Config:
         for _field in self.__slots__:
             if not getattr(self, _field):
                 raise AttributeError(f'{_field} was not provided in .env file')
+
+    @property
+    def games_json_path(self) -> str:
+        root = Path(__file__).resolve().parent.parent.parent
+        return str(root) + '/games.json'
 
     @property
     def redis_url(self) -> str:

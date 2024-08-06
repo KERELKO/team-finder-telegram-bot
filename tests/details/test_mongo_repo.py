@@ -1,6 +1,7 @@
 import pytest
+
 from src.domain.entities import User
-from src.domain.entities.games import Game
+from src.domain.entities.games import GameData
 from src.infra.repositories.impl import MongoUserRepository
 
 
@@ -10,7 +11,7 @@ async def test_add_and_get_operations_with_mongo_repo() -> None:
     user = User(
         id=1,
         username='admin',
-        games=[Game(id=1, rating=4), Game(id=2, rating=6)],
+        games=[GameData(id=1, rating=4), GameData(id=2, rating=6)],
     )
     user_id = user.id
 

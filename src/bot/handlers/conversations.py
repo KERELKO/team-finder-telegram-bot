@@ -8,7 +8,7 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 
 from src.common.di import Container
 from src.common.utils import get_game_by_id, get_game_by_name
-from src.domain.entities.games import games, AbstractGame, Game
+from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
 from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
@@ -33,7 +33,8 @@ class CollectUserDataConversation(BaseConversationHandler):
 
     @classmethod
     async def start_conversation(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        choices: list[list[str]] = [[game.name for game in games()]]
+        games: AbstractGames = Container.resolve(AbstractGames)
+        choices: list[list[str]] = [[game.name for game in games]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             one_time_keyboard=True,
@@ -68,7 +69,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             if value == update.message.text:
                 context.user_data['game_rating'] = code
                 break
-        game = Game(id=context.user_data['game_id'], rating=context.user_data['game_rating'])
+        game = GameData(id=context.user_data['game_id'], rating=context.user_data['game_rating'])
         username = update.message.from_user.username or 'NOT SET'
         repo: AbstractUserRepository = Container.resolve(AbstractUserRepository)
         user = User(
@@ -94,10 +95,11 @@ class CollectUserDataConversation(BaseConversationHandler):
     @classmethod
     def get_handler(cls, command: str) -> ConversationHandler:
         entry_point = [CommandHandler(command, cls.start_conversation)]
+        games: AbstractGames = Container.resolve(AbstractGames)
         states = {
             cls.Handlers.game: [
                 MessageHandler(
-                    ListFilter(items=[g.name for g in games()]), cls.game_handler
+                    ListFilter(items=[g.name for g in games]), cls.game_handler
                 ),
             ],
             cls.Handlers.rating: [
@@ -143,8 +145,8 @@ class CreateTeamConversation(BaseConversationHandler):
                 f'допоміжна команда: /{BotCommands.UPDATE_TEAM}'
             )
             return
-
-        choices: list[list[str]] = [[g.name for g in games()]]
+        games: AbstractGames = Container.resolve(AbstractGames)
+        choices: list[list[str]] = [[g.name for g in games]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -226,10 +228,11 @@ class CreateTeamConversation(BaseConversationHandler):
     @classmethod
     def get_handler(cls, command: str) -> ConversationHandler:
         entry_point = [CommandHandler(command, cls.start_conversation)]
+        games: AbstractGames = Container.resolve(AbstractGames)
         states = {
             cls.Handlers.game: [
                 MessageHandler(
-                    ListFilter(items=[g.name for g in games()]), cls.game_handler
+                    ListFilter(items=[g.name for g in games]), cls.game_handler
                 ),
             ],
             cls.Handlers.rating: [

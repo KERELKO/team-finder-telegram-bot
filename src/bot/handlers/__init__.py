@@ -9,7 +9,7 @@ from telegram.constants import ParseMode
 from src.bot.constants import TeamInfoTextHTML, BotCommands
 from src.bot.utils import get_user
 from src.domain.entities import User, Team
-from src.domain.entities.games import AbstractGame
+from src.domain.entities.games.base import AbstractGame
 from src.common.utils import get_game_by_id, get_game_rank_value
 from src.common.di import Container
 from src.common.filters import TeamFilters, Pagination

@@ -1,5 +1,8 @@
 EXEC_APP = docker exec -it app
 
+.PHONY: bash
+bash:
+	${EXEC_APP} bash
 
 .PHONY: test-details
 test-details:

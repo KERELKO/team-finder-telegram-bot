@@ -1,17 +1,17 @@
 from dataclasses import dataclass
 
 from src.common.config import get_conf
-from src.domain.entities.games import Game
+from src.domain.entities.games.base import GameData
 from src.common.utils import get_game_by_id, get_game_rank_value
 
 
 class BotCommands:
-    START = 'start'
-    HELP = 'help'
-    FIND_TEAM = 'find'
-    CREATE_PROFILE = 'profile'
-    CREATE_TEAM = 'create'
-    UPDATE_TEAM = 'update_team'
+    START: str = 'start'
+    HELP: str = 'help'
+    FIND_TEAM: str = 'find_team'
+    CREATE_PROFILE: str = 'create_profile'
+    CREATE_TEAM: str = 'create_team'
+    UPDATE_TEAM: str = 'update_team'
 
 
 _START_TEXT = """
@@ -95,7 +95,7 @@ _USER_INFO_TEXT_HTML = """
 class UserInfoHTML:
     id: int
     username: str
-    games: list[Game]
+    games: list[GameData]
     show_id: bool = False
 
     def __str__(self) -> str:

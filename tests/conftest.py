@@ -3,21 +3,23 @@ import random
 import pytest
 
 from src.domain.entities import Group, Team, User
-from src.domain.entities.games import AbstractGame, Game, games
+from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
+from src.common.di import Container
 
 
 @pytest.fixture
-def game() -> Game:
-    return Game(id=random.randint(1, 10), rating=random.randint(1, 10))
+def game() -> GameData:
+    return GameData(id=random.randint(1, 10), rating=random.randint(1, 10))
 
 
 @pytest.fixture
 def game_list() -> list[type[AbstractGame]]:
-    return games()
+    games = Container.resolve(AbstractGames)
+    return games
 
 
 @pytest.fixture
-def user(game: Game) -> User:
+def user(game: GameData) -> User:
     user_id = random.randint(1, 12385)
     return User(
         id=user_id,
@@ -37,7 +39,7 @@ def group() -> Group:
 
 
 @pytest.fixture
-def team(game: Game) -> Team:
+def team(game: GameData) -> Team:
     owner_id = random.randint(1, 12385)
     return Team(
         owner_id=owner_id,

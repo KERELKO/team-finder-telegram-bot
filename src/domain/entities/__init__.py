@@ -1,14 +1,14 @@
 import uuid
 from dataclasses import dataclass, field
 
-from .games import Game
+from .games.base import GameData
 
 
 @dataclass
 class User:
     id: int
     username: str
-    games: list[Game] = field(default_factory=list)
+    games: list[GameData] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)

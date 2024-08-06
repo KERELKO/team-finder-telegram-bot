@@ -1,16 +1,18 @@
-from src.domain.entities.games import games
-from src.domain.entities.games import AbstractGame
+from src.common.di import Container
+from src.domain.entities.games.base import AbstractGame, AbstractGames
 
 
 def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
-    for game in games():
+    games = Container.resolve(AbstractGames)
+    for game in games:
         if game.id == game_id:
             return game
     return None
 
 
 def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
-    for game in games():
+    games = Container.resolve(AbstractGames)
+    for game in games:
         if game.name == game_name:
             return game
     return None

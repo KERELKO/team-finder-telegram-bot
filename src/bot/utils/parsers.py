@@ -1,5 +1,5 @@
-from bs4 import BeautifulSoup
 import httpx
+from bs4 import BeautifulSoup
 
 
 def get_group_title(html: str) -> str | None:

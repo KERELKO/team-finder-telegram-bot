@@ -1,9 +1,11 @@
 import logging
 from functools import cache
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 import punq
 
+from src.domain.entities.games.base import AbstractGames
+from src.domain.entities.games.impl import GamesFromClasses
 from src.infra.repositories.base import AbstractTeamRepository, AbstractUserRepository
 from src.infra.repositories.impl import MongoUserRepository, RedisTeamRepository
 
@@ -17,7 +19,7 @@ class Container:
         return Container._init()
 
     @staticmethod
-    def resolve(base_cls: Type[ABC]) -> Any:
+    def resolve(base_cls: type[ABC]) -> Any:
         return Container.get().resolve(base_cls)
 
     @cache
@@ -30,5 +32,7 @@ class Container:
 
         container.register(AbstractUserRepository, instance=MongoUserRepository())
         container.register(AbstractTeamRepository, RedisTeamRepository)
+
+        container.register(AbstractGames, factory=GamesFromClasses.factory)
 
         return container
