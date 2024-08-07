@@ -11,7 +11,7 @@ It is powered by [Redis](https://redis.io/)  and [MongoDB](https://www.mongodb.c
 ### Data collection
 1. The bot collects user data, which is then saved to __MongoDB__
 
-![image](https://github.com/user-attachments/assets/6afa3db0-6a6d-4317-9ca1-24e4375db895)
+![image](https://github.com/user-attachments/assets/df4bf28e-3361-4fcb-9a5e-bd2bba8f89a1)
 
 ### User options
 2. After data collection, the user has two options:  
@@ -20,14 +20,14 @@ It is powered by [Redis](https://redis.io/)  and [MongoDB](https://www.mongodb.c
 
 ### Joining a Team
 4. If the user chooses to join a team, he simply uses the __/find__ command. The bot then tries to find the best match based on the data provided by the user.
-![image](https://github.com/user-attachments/assets/06b40dbc-ef7f-439d-b126-6201a39a564a)
+![image](https://github.com/user-attachments/assets/d4dd9722-d2bb-493f-9403-989ff1f4a6cb)
 
 ### Creating a Team
 5. If the user chooses to create a team, they provide the necessary information to the bot.
 The bot stores this data in __Redis__, which saves and indexes it for a certain time
 (15 minutes by default). During this period, other users can join the team.
 
-![image](https://github.com/user-attachments/assets/d79219a9-b502-469a-b218-d778bfb8f631)
+![image](https://github.com/user-attachments/assets/191918f3-2616-462a-b099-ee5564a08d15)
 
 ## Structure
 ```
