@@ -1,21 +1,8 @@
 # type: ignore
 from abc import ABC, abstractmethod
 
-from telegram import ForceReply, Update, ReplyKeyboardRemove
+from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes, ConversationHandler
-
-from src.bot.constants import START_TEXT, HELP_TEXT
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_html(
-        START_TEXT,
-        reply_markup=ForceReply(selective=True),
-    )
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(HELP_TEXT)
 
 
 class BaseConversationHandler(ABC):

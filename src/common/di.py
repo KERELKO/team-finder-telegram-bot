@@ -22,8 +22,8 @@ class Container:
     def resolve(base_cls: type[ABC]) -> Any:
         return Container.get().resolve(base_cls)
 
-    @cache
     @staticmethod
+    @cache
     def _init() -> punq.Container:
         container = punq.Container()
 

@@ -11,9 +11,17 @@
     },
     "Minecraft": {
         "ranks": {
-            "1": "Daun",
-            "2": "Noob",
-            "3": "Pro"
+            "1": "Noob",
+            "2": "Pro",
+            "3": "God"
         } 
+    },
+    "Counter Strike 2": {
+        "ranks": {
+            "1": "silver",
+            "2": "gold nova",
+            "3": "master guardian",
+            "4": "global elite"
+        }
     }
 }

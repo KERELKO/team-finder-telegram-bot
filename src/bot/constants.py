@@ -27,6 +27,7 @@ _HELP_TEXT = """
 /{2} - створити базовий профіль\n
 /{3} - знайти команду згідно профілю\n
 /{4} - створити команду\n
+/{5} - змінити налаштування створеної команди\n
 """
 HELP_TEXT = _HELP_TEXT.format(
     BotCommands.HELP,
@@ -34,16 +35,17 @@ HELP_TEXT = _HELP_TEXT.format(
     BotCommands.CREATE_PROFILE,
     BotCommands.FIND_TEAM,
     BotCommands.CREATE_TEAM,
+    BotCommands.UPDATE_TEAM,
 )
 
 
 _TEAM_INFO_TEXT_HTML = """
 {0}
-<u><b>Посилання:</b></u> {1}
-<u><b>Заголовок:</b></u> {2}
-<u><b>Гра:</b></u> {3}
-<u><b>Скіл:</b></u> {4}
-<u><b>Гравців потрібно:</b></u> {5}
+⛓<u><b>Посилання:</b></u> {1}\n
+✏️<u><b>Заголовок:</b></u> {2}\n
+⚔️<u><b>Гра:</b></u> {3}\n
+🎖<u><b>Скіл:</b></u> {4}\n
+👥<u><b>Гравців потрібно:</b></u> {5}\n
 {6}
 """
 
@@ -73,10 +75,10 @@ class TeamInfoTextHTML:
         else:
             preface = (
                 'Чудово! Тепер твоя група доступна для вступу для інших користувачів '
-                f'на <u><b>{minutes_text}</b></u>'
+                f'на <u><b>{minutes_text}</b></u>\n'
             )
 
-        desc_text = f'<u><b>Опис:</b></u> {self.description}' if self.description else ''
+        desc_text = f'📝<u><b>Опис:</b></u> {self.description}' if self.description else ''
 
         return text.format(
             preface, self.url, self.title, self.game, self.skill, self.players_to_fill, desc_text
@@ -84,15 +86,15 @@ class TeamInfoTextHTML:
 
 
 _USER_INFO_TEXT_HTML = """
-<u><b>Нікнейм:</b></u> {0}
+👤<u><b>Нікнейм:</b></u> {0}
 {1}
-<u><b>Ігри:</b></u>
+⚔️<u><b>Ігри:</b></u>
 {2}
 """
 
 
 @dataclass(repr=False, eq=False)
-class UserInfoHTML:
+class UserInfoTextHTML:
     id: int
     username: str
     games: list[GameData]

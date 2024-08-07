@@ -80,7 +80,6 @@ class GamesFromFile(AbstractGames):
     game_id: int = 1
 
     def __init__(self) -> None:
-        # TODO: fill it
         self.games: list[AbstractGame] = self.__class__._get_games_from_file()
         self.i = 0
 
@@ -111,7 +110,7 @@ class GamesFromFile(AbstractGames):
         return instance
 
     @classmethod
-    def _get_game_list_from_data(cls, data: dict[str, Any]) -> list[AbstractGame]:
+    def _get_game_list_from_json(cls, data: dict[str, Any]) -> list[AbstractGame]:
         games = []
         for key, value in data.items():
             games.append(cls._create_game_instance(key, value['ranks']))
@@ -123,7 +122,7 @@ class GamesFromFile(AbstractGames):
         games: list[AbstractGame] = []
         with open(get_conf().games_json_path, 'r') as file:
             loaded_data = json.load(file)
-            games = cls._get_game_list_from_data(loaded_data)
+            games = cls._get_game_list_from_json(loaded_data)
         return games
 
     @classmethod

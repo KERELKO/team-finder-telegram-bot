@@ -17,7 +17,7 @@ class AbstractGame(ABC):
 
 
 class AbstractGames(ABC):
-    """Base class that allows to iterate through games
+    """Base class that allows to iterate through all available games
 
     type of game: `AbstractGame`
 

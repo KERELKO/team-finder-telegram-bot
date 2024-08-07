@@ -12,7 +12,7 @@ from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
 from src.domain.entities import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
-from src.bot.constants import TeamInfoTextHTML, BotCommands, UserInfoHTML
+from src.bot.constants import TeamInfoTextHTML, BotCommands, UserInfoTextHTML
 from src.bot.filters import ListFilter, GameRanksFilter
 from src.bot.utils.parsers import parse_telegram_webpage
 from src.bot.utils import get_user_or_end_conversation
@@ -78,7 +78,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             username=username,
         )
         await repo.add(user)
-        reply_text = UserInfoHTML(
+        reply_text = UserInfoTextHTML(
             id=user.id,
             username=user.username,
             games=user.games,
@@ -191,7 +191,7 @@ class CreateTeamConversation(BaseConversationHandler):
         await update.message.reply_text(
             'Чудово! Тепер створи групу зі своєю назвою та описом '
             'коли закінчиш надішли мені посилання на неї, '
-            'Я додам цю групу до пошукової дошки і другі '
+            'я додам цю групу до пошукової дошки і другі '
             'користувачі зможуть зайти щоб пограти разом з тобою',
         )
         return cls.Handlers.link
