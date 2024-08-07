@@ -80,7 +80,7 @@ class GamesFromFile(AbstractGames):
     game_id: int = 1
 
     def __init__(self) -> None:
-        self.games: list[AbstractGame] = self.__class__._get_games_from_file()
+        self.games: list[AbstractGame] = self._get_games_from_file()
         self.i = 0
 
     def __next__(self):

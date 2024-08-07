@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from src.bot.constants import BotCommands
 from src.common.di import Container
 from src.domain.entities import User
 from src.infra.repositories.base import AbstractUserRepository
@@ -27,7 +28,7 @@ async def get_user_or_end_conversation(
     if user is None:
         await update.message.reply_text(  # type: ignore
             'У тебе ще немає профілю\n'
-            'Використай команду /profile щоб створити профіль',
+            f'Використай команду /{BotCommands.CREATE_PROFILE} щоб створити профіль',
         )
         return ConversationHandler.END
     if user_context:

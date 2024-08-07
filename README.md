@@ -33,12 +33,13 @@ The bot stores this data in __Redis__, which saves and indexes it for a certain 
 ```
 .
 ├── data
+│   └── mongodb
 ├── docker-compose.yaml
 ├── Dockerfile
+├── games.json
 ├── LICENSE
 ├── main.py
 ├── Makefile
-├── plan.md
 ├── poetry.lock
 ├── pyproject.toml
 ├── README.md
@@ -48,6 +49,7 @@ The bot stores this data in __Redis__, which saves and indexes it for a certain 
 │   │   ├── filters.py
 │   │   ├── handlers
 │   │   │   ├── base.py
+│   │   │   ├── commands.py
 │   │   │   ├── conversations.py
 │   │   │   └── __init__.py
 │   │   ├── __init__.py
@@ -62,7 +64,10 @@ The bot stores this data in __Redis__, which saves and indexes it for a certain 
 │   │   └── utils.py
 │   ├── domain
 │   │   ├── entities
-│   │   │   ├── games.py
+│   │   │   ├── games
+│   │   │   │   ├── base.py
+│   │   │   │   ├── impl.py
+│   │   │   │   └── __init__.py
 │   │   │   └── __init__.py
 │   │   └── __init__.py
 │   ├── infra
@@ -72,7 +77,6 @@ The bot stores this data in __Redis__, which saves and indexes it for a certain 
 │   │       ├── impl.py
 │   │       └── __init__.py
 │   └── __init__.py
-├── test.py
 └── tests
     ├── conftest.py
     ├── details
