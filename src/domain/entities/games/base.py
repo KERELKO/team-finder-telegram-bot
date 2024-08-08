@@ -27,7 +27,7 @@ class AbstractGames(ABC):
         return self
 
     @abstractmethod
-    def __next__(self) -> type[AbstractGame]:
+    def __next__(self) -> AbstractGame:
         ...
 
     @classmethod

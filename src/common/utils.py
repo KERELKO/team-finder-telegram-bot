@@ -2,7 +2,7 @@ from src.common.di import Container
 from src.domain.entities.games.base import AbstractGame, AbstractGames
 
 
-def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
+def get_game_by_id(game_id: int) -> AbstractGame | None:
     games: AbstractGames = Container.resolve(AbstractGames)
     for game in games:
         if game.id == game_id:
@@ -10,7 +10,7 @@ def get_game_by_id(game_id: int) -> type[AbstractGame] | None:
     return None
 
 
-def get_game_by_name(game_name: str) -> type[AbstractGame] | None:
+def get_game_by_name(game_name: str) -> AbstractGame | None:
     games: AbstractGames = Container.resolve(AbstractGames)
     for game in games:
         if game.name == game_name:

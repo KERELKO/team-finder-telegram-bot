@@ -63,17 +63,17 @@ class GamesFromClasses(AbstractGames):
             self.games = games
         self.i = 0
 
-    def __next__(self):
+    def __next__(self) -> AbstractGame:
         try:
             item = self.games[self.i]
             self.i += 1
-            return item
+            return item(self.i)
         except IndexError:
             raise StopIteration
 
     @classmethod
     def factory(cls) -> list[AbstractGame]:
-        return [val(id=idx+1) for idx, val in enumerate(GamesFromClasses())]
+        return [g for g in cls()]
 
 
 class GamesFromFile(AbstractGames):
