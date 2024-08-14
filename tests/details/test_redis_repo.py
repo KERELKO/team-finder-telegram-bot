@@ -126,7 +126,7 @@ async def test_can_change_players_to_fill_field():
     repo = RedisTeamRepository()
     await repo.add(team)
 
-    await repo.update_players_to_fill(team.id, 3)
+    await repo.update_players_count(team.id, 3)
 
     updated_team = await repo.get_by_owner_id(team.owner_id)
 

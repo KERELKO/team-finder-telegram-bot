@@ -32,5 +32,5 @@ class AbstractTeamRepository(ABC):
         ...
 
     @abstractmethod
-    async def update_players_to_fill(self, team_id: str, count: int) -> None:
+    async def update_players_count(self, team_id: str, count: int) -> None:
         ...

@@ -330,7 +330,7 @@ class UpdateTeamConversation(BaseConversationHandler):
                 'Команда була видалена з пошуку успішно!'
             )
             return ConversationHandler.END
-        await repo.update_players_to_fill(context.user_data['team'].id, count)
+        await repo.update_players_count(context.user_data['team'].id, count)
         await update.message.reply_text(
             'Успішно обновлено!'
         )

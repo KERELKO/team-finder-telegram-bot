@@ -19,7 +19,7 @@ def get_game_by_name(game_name: str) -> AbstractGame | None:
 
 
 def get_game_rank_value(
-    game: type[AbstractGame], key: int, default: str | None = None
+    game: AbstractGame, key: int, default: str | None = None
 ) -> str | None:
     for _key, value in game.ranks().items():  # type: ignore
         if _key == key:
