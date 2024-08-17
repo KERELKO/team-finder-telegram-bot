@@ -10,7 +10,8 @@ from src.infra.repositories.base import AbstractTeamRepository, AbstractUserRepo
 from src.infra.repositories.impl import MongoUserRepository, RedisTeamRepository
 
 
-ABC = TypeVar('ABC')
+BaseClass = TypeVar('BaseClass')
+Implementation = TypeVar('Implementation')
 
 
 class Container:
@@ -19,7 +20,7 @@ class Container:
         return Container._init()
 
     @staticmethod
-    def resolve(base_cls: type[ABC]) -> Any:
+    def resolve(base_cls: type[BaseClass]) -> Implementation | Any:  # type: ignore
         return Container.get().resolve(base_cls)
 
     @staticmethod

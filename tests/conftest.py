@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from src.domain.entities import Group, Team, User
+from src.domain.entities.users import Group, Team, User
 from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
 from src.common.di import Container
 

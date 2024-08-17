@@ -9,7 +9,7 @@ from redis.commands.search.query import Query
 from redis.commands.search.result import Result
 
 from src.common.config import RedisConfig, get_conf
-from src.domain.entities import Team, User
+from src.domain.entities.users import Team, User
 from src.common.filters import TeamFilters, Pagination
 
 from .base import AbstractUserRepository, AbstractTeamRepository
@@ -93,7 +93,7 @@ class RedisTeamRepository(AbstractTeamRepository):
         if filters.max_rating or filters.min_rating:
             mi = filters.min_rating
             ma = filters.max_rating
-            search_parts.append(f'@game_rating:[{mi if mi else 0} {ma if ma else 1000}]')
+            search_parts.append(f'@game_rating:[{mi if mi else 1} {ma if ma else 1000}]')
 
         search_string = ' '.join(search_parts) if search_parts else '*'
 

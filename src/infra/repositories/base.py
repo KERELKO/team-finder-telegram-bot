@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.domain.entities import Team, User
+from src.domain.entities.users import Team, User
 from src.common.filters import TeamFilters, Pagination
 
 

@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from telegram import ForceReply, Update
+from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
@@ -11,7 +11,7 @@ from src.common.config import get_conf
 from src.common.di import Container
 from src.common.filters import Pagination, TeamFilters
 from src.common.utils import get_game_by_id, get_game_rank_value
-from src.domain.entities import Team, User
+from src.domain.entities.users import Team, User
 from src.domain.entities.games.base import AbstractGame
 from src.domain.exceptions import GameNotFoundException, InvalidGameRank
 from src.infra.repositories.base import AbstractTeamRepository
@@ -68,10 +68,7 @@ async def find_team_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_html(  # type: ignore
-        START_TEXT,
-        reply_markup=ForceReply(selective=True),
-    )
+    await update.message.reply_html(START_TEXT)  # type: ignore
 
 
 async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

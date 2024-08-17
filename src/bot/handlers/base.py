@@ -1,4 +1,3 @@
-# type: ignore
 from abc import ABC, abstractmethod
 
 from telegram import ReplyKeyboardRemove, Update
@@ -13,7 +12,7 @@ class BaseConversationHandler(ABC):
 
     @classmethod
     async def cancel_command(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        await update.message.reply_text(
+        await update.message.reply_text(  # type: ignore
             'Розмова перервана ', reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationHandler.END

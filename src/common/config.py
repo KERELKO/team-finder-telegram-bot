@@ -22,8 +22,8 @@ class Config:
     MONGO_PORT: int = int(os.getenv('MONGO_PORT', default='27017'))
     MONGO_HOST: str = os.getenv('MONGO_HOST', default='mongodb')
 
-    REDIS_HOST: str = os.getenv('REDIS_HOST', 'memory')
-    REDIS_PORT: int = int(os.getenv('REDIS_PORT', '6379'))
+    REDIS_HOST: str = os.getenv('REDIS_HOST', default='memory')
+    REDIS_PORT: int = int(os.getenv('REDIS_PORT', default='6379'))
 
     REDIS_OBJECTS_LIFETIME: int = 15 * 60
 

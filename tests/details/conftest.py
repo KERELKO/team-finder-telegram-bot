@@ -1,6 +1,6 @@
 import random
 
-from src.domain.entities import Group, Team
+from src.domain.entities.users import Group, Team
 
 
 def group_factory() -> Group:

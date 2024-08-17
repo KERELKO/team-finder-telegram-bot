@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 from src.common.di import Container
 from src.common.utils import get_game_by_id, get_game_by_name
 from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
-from src.domain.entities import User, Team
+from src.domain.entities.users import User, Team
 from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
 
 from src.bot.constants import TeamInfoTextHTML, BotCommands, UserInfoTextHTML
@@ -265,8 +265,8 @@ class UpdateTeamConversation(BaseConversationHandler):
     Update team -> End search | Change needed users count
     """
 
-    end_search = 'Закрити пошук команди'
-    update_players = 'Змінити потрібну кількість учасників'
+    end_search_text = 'Закрити пошук команди'
+    update_players_text = 'Змінити потрібну кількість учасників'
 
     class Handlers(int, Enum):
         start_conversation = 0
@@ -287,7 +287,7 @@ class UpdateTeamConversation(BaseConversationHandler):
             return ConversationHandler.END
         context.user_data['team'] = team
 
-        choices = [[cls.end_search, cls.update_players]]
+        choices = [[cls.end_search_text, cls.update_players_text]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -302,12 +302,12 @@ class UpdateTeamConversation(BaseConversationHandler):
     @classmethod
     async def path_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         choice = update.message.text
-        if choice == cls.update_players:
+        if choice == cls.update_players_text:
             await update.message.reply_text(
                 'Скільки ще потрібно гравців щоб створити повну команду? [0-5]'
             )
             return cls.Handlers.number_of_players
-        elif choice == cls.end_search:
+        elif choice == cls.end_search_text:
             repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
             await repo.delete_by_owner_id(context._user_id)
             await update.message.reply_text('Команда була видалена з пошуку успішно!')
@@ -342,7 +342,10 @@ class UpdateTeamConversation(BaseConversationHandler):
         states = {
             cls.Handlers.number_of_players: [
                 MessageHandler(
-                    ListFilter(items=[cls.end_search, cls.update_players]), cls.path_handler
+                    ListFilter(
+                        items=[cls.end_search_text, cls.update_players_text]
+                    ),
+                    cls.path_handler
                 ),
             ],
             cls.Handlers.end_search_or_next: [

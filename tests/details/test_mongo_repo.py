@@ -1,6 +1,6 @@
 import pytest
 
-from src.domain.entities import User
+from src.domain.entities.users import User
 from src.domain.entities.games import GameData
 from src.infra.repositories.impl import MongoUserRepository
 
