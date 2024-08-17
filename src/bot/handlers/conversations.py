@@ -41,7 +41,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             input_field_placeholder='Гра',
         )
         await update.message.reply_text(
-            'Зараз мені потрібно дізнатись більше про тебе, скажи в які гру зі списку ти граєш?',
+            'Зараз мені потрібно дізнатись більше про тебе, скажи в яку гру зі списку ти граєш?',
             reply_markup=buttons,
         )
         return cls.Handlers.game
@@ -360,10 +360,7 @@ class UpdateTeamConversation(BaseConversationHandler):
                 ),
             ],
         }
-        fallbacks = [
-            CommandHandler('cancel', cls.cancel_command),
-            CommandHandler('2', cls.cancel_command),
-        ]
+        fallbacks = [CommandHandler('cancel', cls.cancel_command)]
         handler = ConversationHandler(
             entry_points=entry_point,
             states=states,
