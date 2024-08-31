@@ -11,7 +11,7 @@ It is powered by [Redis](https://redis.io/)  and [MongoDB](https://www.mongodb.c
 ### Data collection
 1. The bot collects user data, which is then saved to __MongoDB__
 
-![image](https://github.com/user-attachments/assets/df4bf28e-3361-4fcb-9a5e-bd2bba8f89a1)
+![image](https://github.com/user-attachments/assets/1b6c4cc6-4ffc-4178-9bf7-4434c2fadeb6)
 
 ### User options
 2. After data collection, the user has two options:  
