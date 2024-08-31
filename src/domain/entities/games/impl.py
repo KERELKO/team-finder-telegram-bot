@@ -5,7 +5,7 @@ from typing import Any
 
 from src.common.config import get_conf
 
-from .base import AbstractGame, AbstractGames
+from .base import AbstractGame, Games
 
 
 @dataclass(eq=False)
@@ -55,12 +55,9 @@ class AOE2(AbstractGame):
         return data
 
 
-class GamesFromClasses(AbstractGames):
+class GamesFromClasses(Games):
     def __init__(self, games: list[type[AbstractGame]] | None = None) -> None:
-        if not games:
-            self.games = [AOE2, CS2]
-        else:
-            self.games = games
+        self.games = games or [AOE2, CS2]
         self.i = 0
 
     def __next__(self) -> AbstractGame:
@@ -76,7 +73,7 @@ class GamesFromClasses(AbstractGames):
         return [g for g in cls()]
 
 
-class GamesFromFile(AbstractGames):
+class GamesFromFile(Games):
     game_id: int = 1
 
     def __init__(self) -> None:

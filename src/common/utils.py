@@ -1,9 +1,9 @@
 from src.common.di import Container
-from src.domain.entities.games.base import AbstractGame, AbstractGames
+from src.domain.entities.games.base import AbstractGame, Games
 
 
 def get_game_by_id(game_id: int) -> AbstractGame | None:
-    games: AbstractGames = Container.resolve(AbstractGames)
+    games: Games = Container.resolve(Games)
     for game in games:
         if game.id == game_id:
             return game
@@ -11,7 +11,7 @@ def get_game_by_id(game_id: int) -> AbstractGame | None:
 
 
 def get_game_by_name(game_name: str) -> AbstractGame | None:
-    games: AbstractGames = Container.resolve(AbstractGames)
+    games: Games = Container.resolve(Games)
     for game in games:
         if game.name == game_name:
             return game

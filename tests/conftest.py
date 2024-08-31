@@ -3,7 +3,7 @@ import random
 import pytest
 
 from src.domain.entities.users import Group, Team, User
-from src.domain.entities.games.base import AbstractGame, AbstractGames, GameData
+from src.domain.entities.games.base import AbstractGame, Games, GameData
 from src.common.di import Container
 
 
@@ -14,7 +14,7 @@ def game() -> GameData:
 
 @pytest.fixture
 def game_list() -> list[type[AbstractGame]]:
-    games = Container.resolve(AbstractGames)
+    games = Container.resolve(Games)
     return games
 
 

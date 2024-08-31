@@ -16,14 +16,14 @@ class AbstractGame(ABC):
         return self.id == other.id
 
 
-class AbstractGames(ABC):
+class Games(ABC):
     """Base class that allows to iterate through all available games
 
     type of game: `AbstractGame`
 
     """
 
-    def __iter__(self) -> 'AbstractGames':
+    def __iter__(self) -> 'Games':
         return self
 
     @abstractmethod

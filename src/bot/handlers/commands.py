@@ -22,7 +22,7 @@ async def find_team_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if not user:
         await update.message.reply_text(  # type: ignore
             'У тебе ще немає профілю\n'
-            f'Використай команду /{BotCommands.CREATE_PROFILE} щоб створити профіль',
+            f'Використай команду /{BotCommands.CREATE_PROFILE}, щоб створити профіль',
         )
         return
     await update.message.reply_text(  # type: ignore

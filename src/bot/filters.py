@@ -4,7 +4,7 @@ from telegram import Message
 from telegram.ext import filters
 
 from src.common.di import Container
-from src.domain.entities.games.base import AbstractGames
+from src.domain.entities.games.base import Games
 
 
 class ListFilter(filters.MessageFilter):
@@ -25,7 +25,7 @@ class GameRanksFilter(filters.MessageFilter):
         super().__init__(name=f'{self.__class__.__name__}', data_filter=True)
 
     def filter(self, message: Message) -> bool:
-        games: AbstractGames = Container.resolve(AbstractGames)
+        games: Games = Container.resolve(Games)
         for game in games:
             for rank in game.ranks().values():  # type: ignore
                 if rank == message.text:
