@@ -69,6 +69,7 @@ class RedisConfig:
         return await aioredis.from_url(config.redis_url)
 
     def create_team_index(self) -> bool:
+        """Return `True` if index was created, `False` otherwise"""
         config = get_conf()
         r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 

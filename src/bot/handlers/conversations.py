@@ -190,8 +190,8 @@ class CreateTeamConversation(BaseConversationHandler):
         context.user_data['team']['players_to_fill'] = int(update.message.text)
         await update.message.reply_text(
             'Чудово! Тепер створи групу зі своєю назвою та описом '
-            'коли закінчиш надішли мені посилання на неї, '
-            'я додам цю групу до пошукової дошки і другі '
+            'коли закінчиш надішли мені посилання на неї. '
+            'Я додам цю групу до пошукової дошки і другі '
             'користувачі зможуть зайти, щоб пограти разом з тобою',
         )
         return cls.Handlers.link

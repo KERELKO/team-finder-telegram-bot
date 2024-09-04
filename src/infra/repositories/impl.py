@@ -1,4 +1,6 @@
+from contextlib import asynccontextmanager
 from dataclasses import asdict
+from typing import AsyncGenerator
 
 from mongorepo.asyncio.classes import AsyncBasedMongoRepository
 
@@ -32,6 +34,13 @@ class RedisTeamRepository(AbstractTeamRepository):
         self.config = RedisConfig()
         self._client: Redis | None = None
 
+    @asynccontextmanager
+    async def client(self) -> AsyncGenerator[Redis, None]:
+        try:
+            yield await self.get_client()
+        finally:
+            await self.close_connection()
+
     async def get_client(self) -> Redis:
         """Async redis client"""
         if self._client is None:
@@ -44,13 +53,12 @@ class RedisTeamRepository(AbstractTeamRepository):
         self._client = None
 
     async def add(self, team: Team) -> Team:
-        r = await self.get_client()
-        key = f'{self.config.TEAM_INDEX_PREFIX}{team.id}'
-        async with r.pipeline(transaction=True) as pipe:
-            await pipe.execute_command('JSON.SET', key, '.', orjson.dumps(asdict(team)))
-            await pipe.expire(key, get_conf().REDIS_OBJECTS_LIFETIME)
-            await pipe.execute()
-        await self.close_connection()
+        async with self.client() as r:
+            key = f'{self.config.TEAM_INDEX_PREFIX}{team.id}'
+            async with r.pipeline(transaction=True) as pipe:
+                await pipe.execute_command('JSON.SET', key, '.', orjson.dumps(asdict(team)))
+                await pipe.expire(key, get_conf().REDIS_OBJECTS_LIFETIME)
+                await pipe.execute()
         return team
 
     async def get_by_owner_id(self, owner_id: int, _close_connection: bool = True) -> Team | None:
@@ -69,20 +77,18 @@ class RedisTeamRepository(AbstractTeamRepository):
         if not team:
             return False
         key = f'{self.config.TEAM_INDEX_PREFIX}{team.id}'
-        r = await self.get_client()
-        async with r.pipeline() as pipe:  # type: ignore
-            await pipe.execute_command('JSON.DEL', key)
-            await pipe.execute()
-        await self.close_connection()
+        async with self.client() as r:
+            async with r.pipeline() as pipe:  # type: ignore
+                await pipe.execute_command('JSON.DEL', key)
+                await pipe.execute()
         return True
 
     async def update_players_count(self, team_id: str, count: int) -> None:
-        r = await self.get_client()
-        key = f'{self.config.TEAM_INDEX_PREFIX}{team_id}'
-        async with r.pipeline() as pipe:  # type: ignore
-            await pipe.execute_command('JSON.SET', key, '$.players_to_fill', f'{count}')
-            await pipe.execute()
-        await self.close_connection()
+        async with self.client() as r:
+            key = f'{self.config.TEAM_INDEX_PREFIX}{team_id}'
+            async with r.pipeline() as pipe:  # type: ignore
+                await pipe.execute_command('JSON.SET', key, '$.players_to_fill', f'{count}')
+                await pipe.execute()
 
     async def search(self, filters: TeamFilters, pag: Pagination) -> list[Team]:
         search_parts = []
@@ -97,11 +103,10 @@ class RedisTeamRepository(AbstractTeamRepository):
 
         search_string = ' '.join(search_parts) if search_parts else '*'
 
-        r = await self.get_client()
-        rs = r.ft(self.config.TEAM_INDEX_NAME)
-        result: Result = await rs.search(
-            Query(search_string).paging(pag.offset, pag.limit)
-        )  # type: ignore
-        await self.close_connection()
+        async with self.client() as r:
+            rs = r.ft(self.config.TEAM_INDEX_NAME)
+            result: Result = await rs.search(
+                Query(search_string).paging(pag.offset, pag.limit)
+            )  # type: ignore
         teams = [Team(**orjson.loads(doc.__dict__['json'])) for doc in result.docs]
         return teams
