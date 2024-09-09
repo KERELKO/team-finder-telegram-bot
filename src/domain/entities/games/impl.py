@@ -1,62 +1,43 @@
 import json
-from dataclasses import dataclass
+
 from functools import cache
 from typing import Any
 
 from src.common.config import get_conf
 
-from .base import AbstractGame, Games
+from .base import AbstractGame, Games, _Game
 
 
-@dataclass(eq=False)
-class CS2(AbstractGame):
-    id: int = 1
-    name: str = 'Counter Strike 2'
+CS2 = _Game(
+    id=1,
+    name='Counter Strike 2',
+    _ranks={
+        1: 'Silver',
+        2: 'Gold Nova',
+        3: 'Master Guardian',
+        4: 'Legendary Eagle',
+        5: 'Global Elite',
+    }
+)
 
-    def __eq__(self, other: AbstractGame) -> bool:
-        return super().__eq__(other)
-
-    @classmethod
-    def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
-        data = {
-            1: 'Silver',
-            2: 'Gold Nova',
-            3: 'Master Guardian',
-            4: 'Legendary Eagle',
-            5: 'Global Elite',
-        }
-        if codes:
-            return list(data.keys())
-        return data
-
-
-@dataclass(eq=False)
-class AOE2(AbstractGame):
-    id: int = 2
-    name: str = 'Age of empires 2'
-
-    def __eq__(self, other: AbstractGame) -> bool:
-        return super().__eq__(other)
-
-    @classmethod
-    def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
-        data = {
-            1: '600',
-            2: '800',
-            3: '1000',
-            4: '1200',
-            5: '1400',
-            6: '1600',
-            7: '1800',
-            8: '2000',
-        }
-        if codes:
-            return list(data.keys())
-        return data
+AOE2 = _Game(
+    id=2,
+    name='Age of empires 2',
+    _ranks={
+        1: '600',
+        2: '800',
+        3: '1000',
+        4: '1200',
+        5: '1400',
+        6: '1600',
+        7: '1800',
+        8: '2000',
+    },
+)
 
 
 class GamesFromClasses(Games):
-    def __init__(self, games: list[type[AbstractGame]] | None = None) -> None:
+    def __init__(self, games: list[AbstractGame] | None = None) -> None:
         self.games = games or [AOE2, CS2]
         self.i = 0
 
@@ -64,7 +45,7 @@ class GamesFromClasses(Games):
         try:
             item = self.games[self.i]
             self.i += 1
-            return item(self.i)
+            return item
         except IndexError:
             raise StopIteration
 
@@ -91,20 +72,14 @@ class GamesFromFile(Games):
     @classmethod
     def _create_game_instance(cls, game_name: str, json_ranks: dict[str, str]) -> AbstractGame:
 
-        class ConcreteGame(AbstractGame):
-            @classmethod
-            def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
-                _ranks = {int(key): value for key, value in json_ranks.items()}
-                if codes:
-                    return list(_ranks.keys())
-                return _ranks
-
-        ConcreteGame.__name__ = AbstractGame.__class__.__name__ + f'_{cls.game_id}'
-
-        instance = ConcreteGame(id=cls.game_id, name=game_name)
+        game = _Game(
+            id=cls.game_id,
+            name=game_name,
+            _ranks={int(k): v for k, v in json_ranks.items()},
+        )
         cls.game_id += 1
 
-        return instance
+        return game
 
     @classmethod
     def _get_game_list_from_json(cls, data: dict[str, Any]) -> list[AbstractGame]:

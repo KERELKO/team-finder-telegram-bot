@@ -144,7 +144,7 @@ class CreateTeamConversation(BaseConversationHandler):
                 'якщо хочеш створити нову команду видали минулу\n'
                 f'допоміжна команда: /{BotCommands.UPDATE_TEAM}'
             )
-            return
+            return ConversationHandler.END
         games: Games = Container.resolve(Games)
         choices: list[list[str]] = [[g.name for g in games]]
         buttons = ReplyKeyboardMarkup(
@@ -265,12 +265,12 @@ class UpdateTeamConversation(BaseConversationHandler):
     Update team -> End search | Change needed users count
     """
 
-    end_search_text = 'Закрити пошук команди'
-    update_players_text = 'Змінити потрібну кількість учасників'
+    END_SERCH_TEXT = 'Закрити пошук команди'
+    UPDATE_PLAYERS_COUNT_TEXT = 'Змінити потрібну кількість учасників'
 
     class Handlers(int, Enum):
         start_conversation = 0
-        end_search_or_next = 1
+        end_search_or_continue = 1
         number_of_players = 3
 
     @classmethod
@@ -287,7 +287,7 @@ class UpdateTeamConversation(BaseConversationHandler):
             return ConversationHandler.END
         context.user_data['team'] = team
 
-        choices = [[cls.end_search_text, cls.update_players_text]]
+        choices = [[cls.END_SERCH_TEXT, cls.UPDATE_PLAYERS_COUNT_TEXT]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -297,17 +297,19 @@ class UpdateTeamConversation(BaseConversationHandler):
             'Вибери дію',
             reply_markup=buttons,
         )
-        return cls.Handlers.end_search_or_next
+        return cls.Handlers.end_search_or_continue
 
     @classmethod
-    async def path_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    async def action_with_choice_handler(
+        cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
+    ) -> int:
         choice = update.message.text
-        if choice == cls.update_players_text:
+        if choice == cls.UPDATE_PLAYERS_COUNT_TEXT:
             await update.message.reply_text(
                 'Скільки ще потрібно гравців щоб створити повну команду? [0-5]'
             )
             return cls.Handlers.number_of_players
-        elif choice == cls.end_search_text:
+        elif choice == cls.END_SERCH_TEXT:
             repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
             await repo.delete_by_owner_id(context._user_id)
             await update.message.reply_text('Команда була видалена з пошуку успішно!')
@@ -343,14 +345,14 @@ class UpdateTeamConversation(BaseConversationHandler):
             cls.Handlers.number_of_players: [
                 MessageHandler(
                     ListFilter(
-                        items=[cls.end_search_text, cls.update_players_text]
+                        items=[cls.END_SERCH_TEXT, cls.UPDATE_PLAYERS_COUNT_TEXT]
                     ),
-                    cls.path_handler
+                    cls.action_with_choice_handler
                 ),
             ],
-            cls.Handlers.end_search_or_next: [
+            cls.Handlers.end_search_or_continue: [
                 MessageHandler(
-                    filters.ALL, cls.path_handler
+                    filters.ALL, cls.action_with_choice_handler
                 ),
             ],
             cls.Handlers.number_of_players: [
