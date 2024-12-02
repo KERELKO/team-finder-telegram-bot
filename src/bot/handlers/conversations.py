@@ -2,20 +2,41 @@
 import asyncio
 from enum import Enum
 
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.constants import ParseMode
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
+from telegram.ext import (
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+)
 
+from src.bot.constants import (
+    CHOOSE_GAME_FROM_THE_LIST_TEXT,
+    HOW_GOOD_YOU_ARE_TEXT,
+    HOW_MANY_PLAYERS_DO_YOU_NEED_TEXT,
+    AFTER_CREATED_PROFILE_TEXT,
+    TeamInfoTextHTML,
+    UPDATED_TEXT,
+    TEAM_ALREADY_ACTIVE_TEXT,
+    PROFILE_FOR_GAME_TEXT,
+    FAILED_TO_FIND_TEAM_BY_PROFILE,
+    PLAYERS_TO_FILL_TEXT,
+    UserInfoTextHTML,
+    END_SERCH_TEXT,
+    UPDATE_PLAYERS_COUNT_TEXT,
+    TEAM_WAS_SUCCESSFULLY_DELETED_TEXT,
+    GET_TELEGRAM_GROUP_LINK_AND_FINISH_TEAM_CREATION_TEXT,
+)
+from src.bot.filters import GameRanksFilter, ListFilter
+from src.bot.utils import get_user_or_end_conversation
+from src.bot.utils.parsers import parse_telegram_webpage
 from src.common.di import Container
 from src.common.utils import get_game_by_id, get_game_by_name
-from src.domain.entities.games.base import AbstractGame, Games, GameData
-from src.domain.entities.users import User, Team
-from src.infra.repositories.base import AbstractUserRepository, AbstractTeamRepository
-
-from src.bot.constants import TeamInfoTextHTML, BotCommand, UserInfoTextHTML
-from src.bot.filters import ListFilter, GameRanksFilter
-from src.bot.utils.parsers import parse_telegram_webpage
-from src.bot.utils import get_user_or_end_conversation
+from src.domain.entities.games.base import AbstractGame, GameData, Games
+from src.domain.entities.users import Team, User
+from src.infra.repositories.base import AbstractTeamRepository, AbstractUserRepository
 
 from .base import BaseConversationHandler
 
@@ -40,10 +61,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             one_time_keyboard=True,
             input_field_placeholder='Гра',
         )
-        await update.message.reply_text(
-            'Зараз мені потрібно дізнатися більше про тебе. Скажи, у яку гру зі списку ти граєш?🌝',
-            reply_markup=buttons,
-        )
+        await update.message.reply_text(CHOOSE_GAME_FROM_THE_LIST_TEXT, reply_markup=buttons)
         return cls.Handlers.game
 
     @classmethod
@@ -58,7 +76,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             one_time_keyboard=True,
         )
         await update.message.reply_text(
-            'На якому рівні ти граєш?🪖',
+            HOW_GOOD_YOU_ARE_TEXT,
             reply_markup=buttons,
         )
         return cls.Handlers.rating
@@ -85,8 +103,7 @@ class CollectUserDataConversation(BaseConversationHandler):
             show_id=False
         )
         await update.message.reply_text(
-            'Дякую за надану інформацію!\n'
-            'Тепер я зможу знайти найкращих гравців для твоєї команди!✅'
+            AFTER_CREATED_PROFILE_TEXT +
             f'{str(reply_text)}',
             parse_mode=ParseMode.HTML,
         )
@@ -139,11 +156,7 @@ class CreateTeamConversation(BaseConversationHandler):
 
         team = await repo.get_by_owner_id(owner_id=user.id)
         if team is not None:
-            await update.message.reply_text(
-                'Не можна створювати команду, якщо вже є активна ❌\n'
-                'Якщо хочеш створити нову команду - видали минулу.\n'
-                f'Допоміжна команда: /{BotCommand.UPDATE_TEAM}'
-            )
+            await update.message.reply_text(TEAM_ALREADY_ACTIVE_TEXT)
             return ConversationHandler.END
         games: Games = Container.resolve(Games)
         choices: list[list[str]] = [[g.name for g in games]]
@@ -154,7 +167,7 @@ class CreateTeamConversation(BaseConversationHandler):
             input_field_placeholder='Гра',
         )
         await update.message.reply_text(
-            'Для якої гри ти хочеш зробити команду?✨',
+            PROFILE_FOR_GAME_TEXT,
             reply_markup=buttons,
         )
         return cls.Handlers.game
@@ -169,7 +182,7 @@ class CreateTeamConversation(BaseConversationHandler):
             resize_keyboard=True,
             one_time_keyboard=True,
         )
-        await update.message.reply_text('На якому рівні ти граєш?🪖', reply_markup=buttons)
+        await update.message.reply_text(HOW_GOOD_YOU_ARE_TEXT, reply_markup=buttons)
 
         return cls.Handlers.rating
 
@@ -180,20 +193,13 @@ class CreateTeamConversation(BaseConversationHandler):
                 context.user_data['team']['game_rating_value'] = value
                 context.user_data['team']['game_rating'] = code
                 break
-        await update.message.reply_text(
-            'Скільки гравців тобі потрібно? [1-5]',
-        )
+        await update.message.reply_text(HOW_MANY_PLAYERS_DO_YOU_NEED_TEXT)
         return cls.Handlers.team_size
 
     @classmethod
     async def team_size_handler(cls, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         context.user_data['team']['players_to_fill'] = int(update.message.text)
-        await update.message.reply_text(
-            'Чудово!🥳 Тепер створи групу зі своєю назвою та описом.'
-            'Коли закінчиш, надішли мені посилання на неї. '
-            'Я додам цю групу до пошукової дошки і другі '
-            'користувачі зможуть зайти, щоб пограти разом з тобою',
-        )
+        await update.message.reply_text(GET_TELEGRAM_GROUP_LINK_AND_FINISH_TEAM_CREATION_TEXT)
         return cls.Handlers.link
 
     @classmethod
@@ -265,9 +271,6 @@ class UpdateTeamConversation(BaseConversationHandler):
     Update team -> End search | Change needed users count
     """
 
-    END_SERCH_TEXT = 'Закрити пошук команди🔒'
-    UPDATE_PLAYERS_COUNT_TEXT = 'Змінити потрібну кількість учасників📝'
-
     class Handlers(int, Enum):
         start_conversation = 0
         end_search_or_continue = 1
@@ -281,13 +284,11 @@ class UpdateTeamConversation(BaseConversationHandler):
         repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
         team = await repo.get_by_owner_id(user.id)
         if not team:
-            await update.message.reply_text(
-                'Команд по твому профілю не знайдено 😟'
-            )
+            await update.message.reply_text(FAILED_TO_FIND_TEAM_BY_PROFILE)
             return ConversationHandler.END
         context.user_data['team'] = team
 
-        choices = [[cls.END_SERCH_TEXT, cls.UPDATE_PLAYERS_COUNT_TEXT]]
+        choices = [[END_SERCH_TEXT, UPDATE_PLAYERS_COUNT_TEXT]]
         buttons = ReplyKeyboardMarkup(
             keyboard=choices,
             resize_keyboard=True,
@@ -304,15 +305,13 @@ class UpdateTeamConversation(BaseConversationHandler):
         cls, update: Update, context: ContextTypes.DEFAULT_TYPE,
     ) -> int:
         choice = update.message.text
-        if choice == cls.UPDATE_PLAYERS_COUNT_TEXT:
-            await update.message.reply_text(
-                'Скільки ще потрібно гравців, щоб створити повну команду? [0-5]🪤'
-            )
+        if choice == UPDATE_PLAYERS_COUNT_TEXT:
+            await update.message.reply_text(PLAYERS_TO_FILL_TEXT)
             return cls.Handlers.number_of_players
-        elif choice == cls.END_SERCH_TEXT:
+        elif choice == END_SERCH_TEXT:
             repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
             await repo.delete_by_owner_id(context._user_id)
-            await update.message.reply_text('Команда була видалена з пошуку успішно!✅')
+            await update.message.reply_text(TEAM_WAS_SUCCESSFULLY_DELETED_TEXT)
         return ConversationHandler.END
 
     @classmethod
@@ -323,16 +322,12 @@ class UpdateTeamConversation(BaseConversationHandler):
         repo: AbstractTeamRepository = Container.resolve(AbstractTeamRepository)
         if count == 0:
             await repo.delete_by_owner_id(context._user_id)
-            await update.message.reply_text('Закриваю пошук...')
+            await update.message.reply_text(END_SERCH_TEXT)
             await asyncio.sleep(1)
-            await update.message.reply_text(
-                'Команда була видалена з пошуку успішно!✅'
-            )
+            await update.message.reply_text(TEAM_WAS_SUCCESSFULLY_DELETED_TEXT)
             return ConversationHandler.END
         await repo.update_players_count(context.user_data['team'].id, count)
-        await update.message.reply_text(
-            'Успішно оновлено!✅'
-        )
+        await update.message.reply_text(UPDATED_TEXT)
         return ConversationHandler.END
 
     @classmethod
@@ -342,7 +337,7 @@ class UpdateTeamConversation(BaseConversationHandler):
             cls.Handlers.number_of_players: [
                 MessageHandler(
                     ListFilter(
-                        items=[cls.END_SERCH_TEXT, cls.UPDATE_PLAYERS_COUNT_TEXT]
+                        items=[END_SERCH_TEXT, UPDATE_PLAYERS_COUNT_TEXT]
                     ),
                     cls.action_with_choice_handler
                 ),
