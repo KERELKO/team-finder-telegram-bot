@@ -1,41 +1,42 @@
 from dataclasses import dataclass
+from enum import StrEnum
 
 from src.common.config import get_conf
 from src.domain.entities.games.base import GameData
 from src.common.utils import get_game_by_id, get_game_rank_value
 
 
-class BotCommands:
-    START: str = 'start'
-    HELP: str = 'help'
-    FIND_TEAM: str = 'find_team'
-    CREATE_PROFILE: str = 'create_profile'
-    CREATE_TEAM: str = 'create_team'
-    UPDATE_TEAM: str = 'update_team'
+class BotCommand(StrEnum):
+    START = 'start'
+    HELP = 'help'
+    FIND_TEAM = 'find_team'
+    CREATE_PROFILE = 'create_profile'
+    CREATE_TEAM = 'create_team'
+    UPDATE_TEAM = 'update_team'
 
 
 _START_TEXT = """
-Привіт від TeamFinderBot!\n
-Я спробую допомогти знайти тобі команду для певних ігор\n
-можеш використати команду /{0} яка допоможе розбіратись в функціоналі
+Привіт! Я — TeamFinderBot 🤖\n
+Моя місія — допомогти тобі знайти команду для улюблених ігор 🎮\n
+Спробуй команду /{0}, щоб дізнатися більше про мої можливості!
 """
-START_TEXT = _START_TEXT.format(BotCommands.HELP)
+START_TEXT = _START_TEXT.format(BotCommand.HELP)
 
 _HELP_TEXT = """
 Допоміжний текст, використаний командою /{0}\n
 Почати /{1} команда\n
-/{2} - створити базовий профіль\n
-/{3} - знайти команду згідно профілю\n
-/{4} - створити команду\n
-/{5} - змінити налаштування створеної команди\n
+/{2} - створити базовий профіль🎀\n
+/{3} - знайти команду згідно профілю🔎\n
+/{4} - створити команду🪄\n
+/{5} - змінити налаштування створеної команди📝\n
 """
 HELP_TEXT = _HELP_TEXT.format(
-    BotCommands.HELP,
-    BotCommands.START,
-    BotCommands.CREATE_PROFILE,
-    BotCommands.FIND_TEAM,
-    BotCommands.CREATE_TEAM,
-    BotCommands.UPDATE_TEAM,
+    BotCommand.HELP,
+    BotCommand.START,
+    BotCommand.CREATE_PROFILE,
+    BotCommand.FIND_TEAM,
+    BotCommand.CREATE_TEAM,
+    BotCommand.UPDATE_TEAM,
 )
 
 
@@ -74,11 +75,11 @@ class TeamInfoTextHTML:
             preface = self.preface
         else:
             preface = (
-                'Чудово! Тепер твоя група доступна для вступу для інших користувачів '
+                '🏆Чудово! Тепер твоя група доступна для вступу для інших користувачів '
                 f'на <u><b>{minutes_text}</b></u>\n'
             )
 
-        desc_text = f'📝<u><b>Опис:</b></u> {self.description}' if self.description else ''
+        desc_text = f'📖<u><b>Опис:</b></u> {self.description}' if self.description else ''
 
         return text.format(
             preface, self.url, self.title, self.game, self.skill, self.players_to_fill, desc_text
@@ -104,7 +105,7 @@ class UserInfoTextHTML:
         text = _USER_INFO_TEXT_HTML
         id_text = ''
         if self.show_id:
-            id_text = f'<u><b>ID:</b></u> {self.id}'
+            id_text = f'👤<u><b>ID:</b></u> {self.id}'
         games = []
         for game_data in self.games:
             game = get_game_by_id(game_data.id)

@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-from src.bot.constants import HELP_TEXT, START_TEXT, BotCommands, TeamInfoTextHTML
+from src.bot.constants import HELP_TEXT, START_TEXT, BotCommand, TeamInfoTextHTML
 from src.bot.utils import get_user
 from src.common.config import get_conf
 from src.common.di import Container
@@ -22,7 +22,7 @@ async def find_team_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if not user:
         await update.message.reply_text(  # type: ignore
             'У тебе ще немає профілю\n'
-            f'Використай команду /{BotCommands.CREATE_PROFILE}, щоб створити профіль',
+            f'Використай команду /{BotCommand.CREATE_PROFILE}, щоб створити профіль',
         )
         return
     await update.message.reply_text(  # type: ignore

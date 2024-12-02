@@ -37,17 +37,17 @@ class RedisTeamRepository(AbstractTeamRepository):
     @asynccontextmanager
     async def client(self) -> AsyncGenerator[Redis, None]:
         try:
-            yield await self.get_client()
+            yield await self._get_client()
         finally:
-            await self.close_connection()
+            await self._close_connection()
 
-    async def get_client(self) -> Redis:
+    async def _get_client(self) -> Redis:
         """Async redis client"""
         if self._client is None:
             self._client = await self.config.get_async_redis_client()
         return self._client
 
-    async def close_connection(self) -> None:
+    async def _close_connection(self) -> None:
         if self._client is not None:
             await self._client.aclose()
         self._client = None
@@ -62,12 +62,12 @@ class RedisTeamRepository(AbstractTeamRepository):
         return team
 
     async def get_by_owner_id(self, owner_id: int, _close_connection: bool = True) -> Team | None:
-        r = await self.get_client()
+        r = await self._get_client()
         query_string = f'@owner_id:[{owner_id} {owner_id}]'
         rs = r.ft(self.config.TEAM_INDEX_NAME)
         result: Result = await rs.search(Query(query_string))  # type: ignore
         if _close_connection:
-            await self.close_connection()
+            await self._close_connection()
         if not result.docs:
             return None
         return Team(**orjson.loads(result.docs[0].__dict__['json']))
