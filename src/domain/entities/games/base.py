@@ -7,9 +7,8 @@ class AbstractGame(ABC):
     id: int
     name: str = field(default='', kw_only=True)
 
-    @classmethod
     @abstractmethod
-    def ranks(cls, codes: bool = False) -> dict[int, str] | list[int]:
+    def ranks(self, codes: bool = False) -> dict[int, str] | list[int]:
         ...
 
 
@@ -43,8 +42,8 @@ class GameData:
 class _Game(AbstractGame):
     _ranks: dict[int, str]
 
-    def __eq__(self, other: 'AbstractGame') -> bool:
-        return self.id == other.id
+    def __eq__(self, other) -> bool:
+        return self.id == other.id if isinstance(other, _Game) else False
 
     def ranks(self, codes: bool = False) -> dict[int, str] | list[int]:
         if codes:

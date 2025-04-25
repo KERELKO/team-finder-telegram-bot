@@ -2,8 +2,6 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 from typing import AsyncGenerator
 
-from mongorepo.asyncio.classes import AsyncBasedMongoRepository
-
 import orjson
 
 from redis.asyncio import Redis
@@ -11,22 +9,10 @@ from redis.commands.search.query import Query
 from redis.commands.search.result import Result
 
 from src.common.config import RedisConfig, get_conf
-from src.domain.entities.users import Team, User
+from src.domain.entities.users import Team
 from src.common.filters import TeamFilters, Pagination
 
-from .base import AbstractUserRepository, AbstractTeamRepository
-
-
-class MongoUserRepository(AsyncBasedMongoRepository[User], AbstractUserRepository):
-    class Meta:
-        collection = get_conf().mongodb_user_collection()
-
-    async def get_by_id(self, id: int) -> User | None:
-        return await super().get(id=id)
-
-    async def add(self, user: User) -> User:
-        await super().add(dto=user)
-        return user
+from src.infra.repositories.base import AbstractTeamRepository
 
 
 class RedisTeamRepository(AbstractTeamRepository):

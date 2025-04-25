@@ -3,3 +3,7 @@ idea.drawio
 plan.md
 .env
 test.py
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+data/
