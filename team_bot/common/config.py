@@ -57,8 +57,8 @@ class RedisConfig:
     TEAM_INDEX_NAME: str = 'idx:teams'
     TEAM_INDEX_PREFIX: str = 'team:'
 
-    async def get_async_redis_client(self) -> aioredis.Redis:
-        return await aioredis.from_url(self.redis_url)
+    def get_async_redis_client(self) -> aioredis.Redis:
+        return aioredis.from_url(self.redis_url)
 
     def create_team_index(self) -> bool:
         """Return `True` if index was created, `False` otherwise"""

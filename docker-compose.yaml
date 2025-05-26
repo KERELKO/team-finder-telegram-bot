@@ -6,7 +6,7 @@ services:
     build: .
     volumes:
       - .:/app
-    command: python3 team_bot/entry.py_telegram_bot.py
+    command: python3 -m team_bot.entry.aiogram_bot
     depends_on:
       - mongodb
       - mongo-express

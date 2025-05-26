@@ -14,7 +14,7 @@ from team_bot.bot.v1.constants import (
     TeamInfoTextHTML,
 )
 from team_bot.bot.v1.utils import get_user
-from team_bot.common.config import get_conf
+from team_bot.common.config import Config
 from team_bot.infra.di import Container
 from team_bot.domain.utils import get_game_by_id, get_game_rank_value
 from team_bot.domain.entities.games.base import BaseGame, GameCollection
