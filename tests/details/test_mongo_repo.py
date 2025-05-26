@@ -1,13 +1,13 @@
+from typing import cast
 import pytest
 
-from src.domain.entities.users import User
-from src.domain.entities.games import GameData
-from src.infra.repositories.impl import MongoUserRepository
+from team_bot.domain.entities.users import User, GameData
+from team_bot.infra.repositories.user.mongo import MongoUserRepository, AbstractUserRepository
 
 
 @pytest.mark.asyncio
 async def test_add_and_get_operations_with_mongo_repo() -> None:
-    repo = MongoUserRepository()
+    repo = cast(AbstractUserRepository, MongoUserRepository())
     user = User(
         id=1,
         username='admin',

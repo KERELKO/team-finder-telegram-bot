@@ -1,10 +1,15 @@
 import random
+import uuid
 
 import pytest
 
-from src.domain.entities.users import Group, Team, User
-from src.domain.entities.games.base import AbstractGame, Games, GameData
-from src.common.di import Container
+from team_bot.domain.entities.users import Group, Team, User, GameData
+from team_bot.domain.entities.games.base import BaseGame
+from team_bot.domain.entities.games.impl import ImperativeGameCollection
+
+
+def id_factory():
+    return str(lambda: uuid.uuid4())
 
 
 @pytest.fixture
@@ -13,9 +18,8 @@ def game() -> GameData:
 
 
 @pytest.fixture
-def game_list() -> list[type[AbstractGame]]:
-    games = Container.resolve(Games)
-    return games
+def game_list() -> list[BaseGame]:
+    return ImperativeGameCollection().factory()
 
 
 @pytest.fixture
@@ -32,6 +36,7 @@ def user(game: GameData) -> User:
 def group() -> Group:
     owner_id = random.randint(1, 12385)
     return Group(
+        id=id_factory(),
         owner_id=owner_id,
         title=f'test_{owner_id}',
         description='test group',
@@ -42,6 +47,7 @@ def group() -> Group:
 def team(game: GameData) -> Team:
     owner_id = random.randint(1, 12385)
     return Team(
+        id=id_factory(),
         owner_id=owner_id,
         title=f'test_{owner_id}',
         players_to_fill=random.randint(2, 10),

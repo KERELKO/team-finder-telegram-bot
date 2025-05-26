@@ -14,7 +14,8 @@ beautifulsoup4 = "^4.12.3"
 punq = "^0.7.0"
 orjson = "^3.10.6"
 redis = "^5.0.7"
-mongorepo = "^3.0.1"
+aiogram = "^3.20.0.post0"
+mongorepo = "^3.1.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"

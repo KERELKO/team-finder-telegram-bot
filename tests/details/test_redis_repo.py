@@ -1,16 +1,18 @@
 import pytest
 
-from src.domain.entities.users import Team
-from src.domain.entities.games.impl import AOE2
-from src.common.filters import TeamFilters, Pagination
-from src.infra.repositories.impl import RedisTeamRepository
+from team_bot.domain.entities.users import Team
+from team_bot.domain.entities.games.impl import AOE2
 
-from .conftest import team_factory
+from team_bot.infra.di import Container
+from team_bot.infra.repositories.base import TeamFilters, Pagination
+from team_bot.infra.repositories.team.redis import RedisTeamRepository
+
+from .conftest import team_factory, id_factory
 
 
 @pytest.mark.asyncio
-async def test_can_add_teams():
-    repo = RedisTeamRepository()
+async def test_can_add_teams(container: Container):
+    repo = container.resolve(RedisTeamRepository)
 
     team_1 = team_factory()
     team_2 = team_factory()
@@ -24,12 +26,12 @@ async def test_can_add_teams():
 
 
 @pytest.mark.asyncio
-async def test_can_find_team_with_search():
+async def test_can_find_team_with_search(container: Container):
     team = team_factory()
     team.game_id = AOE2.id
     team.game_rating = 6
 
-    repo = RedisTeamRepository()
+    repo = container.resolve(RedisTeamRepository)
 
     await repo.add(team)
 
@@ -45,16 +47,18 @@ async def test_can_find_team_with_search():
 
 
 @pytest.mark.asyncio
-async def test_multiple_search_filters():
+async def test_multiple_search_filters(container: Container):
     team = Team(
         owner_id=1,
+        id=id_factory(),
         title='for search',
         players_to_fill=4,
         game_id=AOE2.id,
         game_rating=5,
     )
 
-    repo = RedisTeamRepository()
+    repo = container.resolve(RedisTeamRepository)
+
     await repo.add(team)
 
     searched_teams = await repo.search(
@@ -76,8 +80,9 @@ async def test_multiple_search_filters():
 
 
 @pytest.mark.asyncio
-async def test_can_find_team_by_owner_id():
+async def test_can_find_team_by_owner_id(container: Container):
     team = Team(
+        id=id_factory(),
         owner_id=780,
         title='for search',
         players_to_fill=4,
@@ -85,10 +90,10 @@ async def test_can_find_team_by_owner_id():
         game_rating=5,
     )
 
-    repo = RedisTeamRepository()
+    repo = container.resolve(RedisTeamRepository)
     await repo.add(team)
 
-    team = await repo.get_by_owner_id(owner_id=team.owner_id)
+    team = await repo.get_by_owner_id(owner_id=team.owner_id)  # type: ignore
     assert team is not None
 
     assert team.players_to_fill == 4
@@ -96,8 +101,9 @@ async def test_can_find_team_by_owner_id():
 
 
 @pytest.mark.asyncio
-async def test_can_delete_team_by_owner_id():
+async def test_can_delete_team_by_owner_id(container: Container):
     team = Team(
+        id=id_factory(),
         owner_id=78999,
         title='for search',
         players_to_fill=4,
@@ -105,7 +111,7 @@ async def test_can_delete_team_by_owner_id():
         game_rating=5,
     )
 
-    repo = RedisTeamRepository()
+    repo = container.resolve(RedisTeamRepository)
     await repo.add(team)
 
     is_deleted = await repo.delete_by_owner_id(owner_id=team.owner_id)
@@ -114,8 +120,9 @@ async def test_can_delete_team_by_owner_id():
 
 
 @pytest.mark.asyncio
-async def test_can_change_players_to_fill_field():
+async def test_can_change_players_to_fill_field(container: Container):
     team = Team(
+        id=id_factory(),
         owner_id=808080,
         title='for search',
         players_to_fill=4,
@@ -123,7 +130,7 @@ async def test_can_change_players_to_fill_field():
         game_rating=5,
     )
 
-    repo = RedisTeamRepository()
+    repo = container.resolve(RedisTeamRepository)
     await repo.add(team)
 
     await repo.update_players_count(team.id, 3)
